@@ -152,9 +152,11 @@ def write_output_to_csv(output, output_filename):
 #           F [?, ?, ?, ?]
 #          SM [?, ?, ?, ?]
 #          FM [?, ?, ?, ?]
-pk_dict = {"bomber": [0.95, 0.85, 0.95, 0.99],
-           "fighter": [0.65, 0.90, 0.75, 0.99],
-           "slow missile": [0.75, 0.95, 0.90, 0.99],
-           "fast missile": [0.25, 0.35, 0.15, 0.90]}
 # run algorithm
-munkres("../dataFiles/threat_location.csv", "../dataFiles/weapon_data.csv", pk_dict)
+def runMunkres(threatFileLocation, weaponFileLocation):
+    pk_dict = {"bomber": [0.95, 0.85, 0.95, 0.99],
+            "fighter": [0.65, 0.90, 0.75, 0.99],
+            "slow missile": [0.75, 0.95, 0.90, 0.99],
+            "fast missile": [0.25, 0.35, 0.15, 0.90]}
+    return munkres(threatFileLocation, weaponFileLocation, pk_dict)
+    

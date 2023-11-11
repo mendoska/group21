@@ -15,7 +15,7 @@ fast_missile_info = ['fast missile', 0.25, 0.35, 0.15, 0.90]
  #populates function inputs and input position
 function_inputs = []
 inputs_position = []
-with open('../dataFiles/threat_location.csv', 'r') as threats:
+with open('dataFiles/threat_location.csv', 'r') as threats:
     inputs = threats.readlines()
     for line in inputs:
         as_list = line.split(',')
@@ -198,8 +198,8 @@ def print_results(function_input, solution):
 
     print()
 
-
-initial_solution = []
-for i in range(50):
-    initial_solution.append(random.randint(1, 4))
-simulated_annealing(initial_solution)
+def runSimulatedAnnealing():
+    initial_solution = []
+    for i in range(50):
+        initial_solution.append(random.randint(1, 4))
+    return simulated_annealing(initial_solution)
