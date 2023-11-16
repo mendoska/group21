@@ -211,6 +211,6 @@ def printResultsToList(function_input, solution):
 
 def runSimulatedAnnealing():
     initial_solution = []
-    for i in range(50):
+    for _ in range(50):
         initial_solution.append(random.randint(1, 4))
     return simulated_annealing(initial_solution)

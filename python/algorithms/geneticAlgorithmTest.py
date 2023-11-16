@@ -141,7 +141,6 @@ def on_gen(ga_instance):
     print("Current best solution:\n", ga_instance.best_solution()[0])
     print("Fitness of the best solution :", ga_instance.best_solution()[1], "\n")
     if ga_instance.generations_completed == ga_instance.num_generations :
-        global res
         for solution in range(len(ga_instance.best_solution()[0])):
 
             if ga_instance.best_solution()[0][solution] == 1:
@@ -163,7 +162,6 @@ def runGA():
     num_parents_mating = 10
 
     fitness_function = fitness_func
-    global res
     sol_per_pop = 20
     num_genes = len(function_inputs)
 
