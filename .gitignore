@@ -1,4 +1,5 @@
 python/algorithms/.idea/*
+python/algorithms/__pycache__/*
 
 python/dataFiles/trained_model.zip
 python/algorithms/.DS_Store

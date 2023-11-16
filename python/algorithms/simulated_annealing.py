@@ -49,9 +49,11 @@ def simulated_annealing(initial_state):
                 solution = neighbor
         # decrement the temperature
         current_temp -= alpha
-    print_results(function_inputs, solution)
-    print(leak_percent(solution))
-    return solution
+    # print_results(function_inputs, solution)
+    print(f"Leak Percentage: {leak_percent(solution)}%")
+    return printResultsToList(function_inputs, solution)
+
+    # return solution
 
 def leak_percent(state):
     success_count = 0
@@ -197,6 +199,15 @@ def print_results(function_input, solution):
             continue
 
     print()
+def printResultsToList(function_input, solution):
+    response = []
+    for i, threatName in enumerate(function_inputs):
+        # This is a weapon list with indexes from 0 - 3
+        weaponList = ['Long Range Missile','Medium Range Missile','Short Range Missile','Directed Energy']
+        """ Instead of having individual if statements for each scenario, I just took the checked solution value, which already was attributed to a specific weapon,
+            and subtracted 1 to have the indexes match with the weapons list """
+        response.append (f"[THREAT: {threatName}, Weapon Chosen: {weaponList[solution[i]-1]}]")
+    return response
 
 def runSimulatedAnnealing():
     initial_solution = []
