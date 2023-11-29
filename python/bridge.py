@@ -3,13 +3,20 @@ from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
 from time import time
-
+import tkinter as tk
+##from tkinter import *
+##from tkinter import ttk
+from tkinter.ttk import Button
 
 threatFileLocation="dataFiles/threat_location.csv"
 weaponFileLocation="dataFiles/weapon_data.csv"
 
+window = tk.Tk()
+window.title(" Algorithms ")
 
-def selectAlgorithm(algorithmChoice=None):
+window.geometry("900x1000")
+
+def selectAlgorithm(algorithmChoice):
     if algorithmChoice == None:
         algorithmChoice = input("""
         Please Input 1 - 4 to Select Algorithm:
@@ -33,13 +40,15 @@ def selectAlgorithm(algorithmChoice=None):
         printOutputList(outputList=res)    
     else:
         print("Invalid Input")
-
-
+    
+    
 
 def printOutputList(outputList: list):
+    text = tk.Text(master=window, height=100, width=100)
+    text.grid(column=10, row=10)
     for entry in outputList:
         print(entry)
-    
+        text.insert(tk.END, str(entry) + '\n')
 
 def testTimeForSingleAlgorithm(selection:str) -> float:
     start_time = time()
@@ -50,12 +59,46 @@ def testTimeForSingleAlgorithm(selection:str) -> float:
 def testTimeAllArrays():
     r = []
     for i in range(4):
-        r.append(f'{i}: {testTimeForSingleAlgorithm(f"{i+1}")} Seconds')
+        r.append(f'{i+1}: {testTimeForSingleAlgorithm(f"{i+1}")} Seconds')
     printOutputList(outputList=r)
-    
+
+algorithmChoice=[]
+
+def on_click(text,algorithmChoice):
+    algorithmChoice.clear()
+    algorithmChoice.append(text)
+    print("algorithm choice is is:", algorithmChoice)
+    if text != '5':
+        selectAlgorithm(str(algorithmChoice[0]))
+    else:
+        testTimeAllArrays()
 
 
 
+lb=tk.Label(window, text="Choose the algorithm you would like to run or test time all arrays.")
+lb.grid(column=0, row=0)
 
-selectAlgorithm()
+
+b1=Button(window, text= "1. Deep Q Network", command=lambda:on_click("1",algorithmChoice))
+b1.grid(column=0, row=1)
+
+b2=Button(window, text= "2. Genetic Algorithm", command=lambda: on_click("2",algorithmChoice))
+b2.grid(column=0, row=2)
+
+b3=Button(window, text= "3. Munkres (Hungarian)", command=lambda: on_click("3",algorithmChoice))
+b3.grid(column=0, row=3)
+
+b4=Button(window, text= "4. Simulated Annealing", command=lambda: on_click("4",algorithmChoice))
+b4.grid(column=0, row=4)
+
+b5=Button(window, text= "Test Time All Arrays", command=lambda: on_click("5",algorithmChoice))
+b5.grid(column=0, row=5)
+
+
+
+window.mainloop()
+
+
+#selectAlgorithm()
+#testTimeAllArrays()
 
