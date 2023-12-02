@@ -8,7 +8,7 @@ python/*/.DS_Store
 python/dataFiles/trained_model.zip
 python/dataFiles/Weapons_and_Test_Threats.xlsx
 
-python/*/Tests
+# python/*/Tests
 
 
 
