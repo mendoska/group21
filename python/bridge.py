@@ -4,11 +4,12 @@ from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
 
 
-threatFileLocation="dataFiles/threat_location.csv"
-weaponFileLocation="dataFiles/weapon_data.csv"
+threatFileLocation="./dataFiles/threat_location.csv"
+weaponFileLocation="./dataFiles/weapon_data.csv"
 
 
 def selectAlgorithm():
+    dqn_model_path = None
     algorithmChoice = input("""
     Please Input 1 - 4 to Select Algorithm:
     ---------------------------------------
@@ -21,7 +22,7 @@ def selectAlgorithm():
 # # If running python 3.10, use better match case vs elif
 # match algorithmChoice:
 #     case "1":
-#         runDQN()
+#         dqn_model_path = runDQN(loadPath=dqn_model_path)
 #     case "2":
 #         runGA(threatFileLocation=threatFileLocation)
 #     case "3":
@@ -30,7 +31,7 @@ def selectAlgorithm():
 #         runSimulatedAnnealing
 
     if algorithmChoice == "1":
-        runDQN()
+        dqn_model_path = runDQN(loadPath=dqn_model_path)
     elif algorithmChoice == "2":
         runGA(threatFileLocation=threatFileLocation)
     elif algorithmChoice == "3":

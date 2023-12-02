@@ -246,7 +246,9 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
                 Weapon("directed energy", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), de_pk)]
 
 # Train DQN agent and save it to "trained_model.zip" for future use
-def runDQN(savePath = None):
-    return train_dqn_agent(test_weapons, make_training_data(), num_episodes=100, save_path=savePath)
+def runDQN(loadPath = None, savePath = "./dataFiles/trained_model.zip"):
+    train_dqn_agent(test_weapons, make_training_data(), num_episodes=100, save_path=savePath, load_path=loadPath)
+    return savePath
+
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
