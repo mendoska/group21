@@ -1,22 +1,10 @@
 # Python Ignored Files
 
+# Python Ignored Files
+
 python/algorithms/.idea/*
 python/algorithms/__pycache__
 python/algorithms/.DS_Store
 
 python/dataFiles/trained_model.zip
-python/dataFiles/Weapons_and_Test_Threats.xlsx
-
-python/testBridge.py
-python/guiTest.py
-
-
-
-#  Simulation Ignored Files
-
-simulation/swarm_ws/src/.vscode
-simulation/swarm_ws/src/ROS2Swarm
-simulation/swarm_ws/src/rosbag_*
-simulation/swarm_ws/src/log
-simulation/swarm_ws/src/build  
-simulation/swarm_ws/src/install
+python/algorithms/.DS_Store
