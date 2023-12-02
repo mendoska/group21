@@ -1,14 +1,15 @@
 # Python Ignored Files
 
-python/algorithms/.idea/*
-python/algorithms/__pycache__
-python/algorithms/.DS_Store
+python/*/.idea
+python/*/__pycache__
+python/*/*/__pycache__
+python/*/.DS_Store
 
 python/dataFiles/trained_model.zip
 python/dataFiles/Weapons_and_Test_Threats.xlsx
 
-python/testBridge.py
-python/guiTest.py
+python/*/Tests
+
 
 
 

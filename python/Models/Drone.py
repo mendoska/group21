@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 @dataclass
 class Drone:
@@ -10,9 +11,9 @@ class Drone:
     currentStatus: str = "Dead"
     
     # location list: [x,y,z(eventually)]
-    startingLocation: list[int] = field(default_factory=list)
-    destroyedLocation: list[int] = field(default_factory=list)
-    currentLocation: list[int]  = field(default_factory=list)
+    startingLocation: List[int] = field(default_factory=list)
+    destroyedLocation: List[int] = field(default_factory=list)
+    currentLocation: List[int]  = field(default_factory=list)
     
     
     
