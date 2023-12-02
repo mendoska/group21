@@ -15,8 +15,11 @@ python/guiTest.py
 #  Simulation Ignored Files
 
 simulation/swarm_ws/src/.vscode
-simulation/swarm_ws/src/ROS2Swarm
+simulation/swarm_ws/src/ROS2swarm
 simulation/swarm_ws/src/rosbag_*
 simulation/swarm_ws/src/log
 simulation/swarm_ws/src/build  
 simulation/swarm_ws/src/install
+simulation/swarm_ws/install
+simulation/swarm_ws/build
+simulation/swarm_ws/log
