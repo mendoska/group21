@@ -1,6 +1,5 @@
 import subprocess 
 from yaml import safe_load
-
 from icecream import ic
 
 def run_Command(command:str) -> str:
@@ -61,32 +60,38 @@ def getDroneLocation(droneID: int) -> dict:
         return 0
 
 # async  add drone to simulation
-""" 
-return created Location
-"""
+""" return created Location """
+async def addDroneToSimulation(droneID:int) -> None:
+    pass 
 
 
 # remove drone from simulation
-""" 
-return 'destroyed' location  
+""" return 'destroyed' location  """
+def destroyDrone(droneID: int) -> list:
+    """
+    set velocity = 0
+    location
+    remove
 
-set velocity = 0
-location
-remove
 
-
-return location, confirmation
-"""
+    return [locationList, confirmation]
+    """
+    pass
 
     
 # set Drone Velocity Function
-""" 
-set cmd_vel for drone
-"""
+""" set cmd_vel for drone """
+def setDroneVelocity(droneID:int, xVelocity:float = 0, yVelocity:float = 0, zVelocity:float = 0) -> str:
+    pass
+
 
 # start drone
-"""
+""" return confirmation """
+def startDrone(droneID:int) -> str:
+    pass
 
-return confirmation
-"""
+
+# Start World Simulation
+async def startEmptyGazeboWorldSimulation() -> None:
+    pass
     
