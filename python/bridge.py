@@ -19,17 +19,6 @@ def selectAlgorithm():
     4: Simulated Annealing \n""")
 
 
-# # If running python 3.10, use better match case vs elif
-# match algorithmChoice:
-#     case "1":
-#         dqn_model_path = runDQN(loadPath=dqn_model_path)
-#     case "2":
-#         runGA(threatFileLocation=threatFileLocation)
-#     case "3":
-#         runMunkres(threatFileLocation=threatFileLocation,weaponFileLocation=weaponFileLocation)
-#     case "4":
-#         runSimulatedAnnealing
-
     if algorithmChoice == "1":
         dqn_model_path = runDQN(loadPath=dqn_model_path)
     elif algorithmChoice == "2":
