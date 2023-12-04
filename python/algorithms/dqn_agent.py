@@ -170,7 +170,7 @@ def use_testing_data(threat_file):
 
 # TRAIN DEEP Q-NETWORK TO SOLVE BATTLE ENV
 def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, load_path=None, use_actual_data=False):
-    env = BattleEnv(weapon_lst, use_testing_data("python/dataFiles/threat_location_dqn.csv") if use_actual_data else threat_lst)
+    env = BattleEnv(weapon_lst, use_testing_data("dataFiles/threat_location_dqn.csv") if use_actual_data else threat_lst)
 
     # Define hyperparameters
     policy_kwargs = dict(net_arch=[64, 64])  # Specify NN architecture for agent: MLP with 2 hidden layers of 64 neurons
@@ -252,10 +252,10 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
                 Weapon("short range missile", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), srm_pk),
                 Weapon("directed energy", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), de_pk)]
 
-threat_count = count_threats("python/dataFiles/threat_location_dqn.csv")
+threat_count = count_threats("dataFiles/threat_location_dqn.csv")
 
 # Train DQN agent and save it to "trained_model.zip" for future use
-def runDQN(loadPath=None, savePath="python/dataFiles/trained_model.zip", train=True):
+def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True):
     if train:
         train_dqn_agent(test_weapons, make_training_data(threat_count), num_episodes=100, save_path=savePath, load_path=loadPath)
     else:

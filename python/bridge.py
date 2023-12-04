@@ -2,12 +2,12 @@ from algorithms.dqn_agent import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
-import torch
-torch.zeros(1).cuda()
+##import torch
+##torch.zeros(1).cuda()
 
-threatFileLocation="python/dataFiles/threat_location.csv"
-weaponFileLocation="python/dataFiles/weapon_data.csv"
-dqnModelPath = "python/dataFiles/trained_model.zip"
+threatFileLocation="dataFiles/threat_location.csv"
+weaponFileLocation="dataFiles/weapon_data.csv"
+dqnModelPath = "dataFiles/trained_model.zip"
 
 def selectAlgorithm():
     algorithmChoice = input("""
@@ -28,6 +28,6 @@ def selectAlgorithm():
     elif algorithmChoice == "4":
         runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
     elif algorithmChoice == "5":
-        runSimulatedAnnealing
+        runSimulatedAnnealing()
     
 selectAlgorithm()
