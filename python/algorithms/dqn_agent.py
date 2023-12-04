@@ -151,6 +151,12 @@ def make_training_data(num_threats=10):
         threats.append(Threat(random.choice(threat_names), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000)))
     return threats
 
+# Read the number of inputs 
+def count_threats(threat_file):
+    with open(threat_file, 'r') as file:
+        reader = csv.reader(file)
+        threats = list(reader)
+        return len(threats)
 
 # Test agent on threats from file
 def use_testing_data(threat_file):
@@ -246,10 +252,12 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
                 Weapon("short range missile", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), srm_pk),
                 Weapon("directed energy", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), de_pk)]
 
+threat_count = count_threats("python/dataFiles/threat_location_dqn.csv")
+
 # Train DQN agent and save it to "trained_model.zip" for future use
 def runDQN(loadPath=None, savePath="python/dataFiles/trained_model.zip", train=True):
     if train:
-        train_dqn_agent(test_weapons, make_training_data(), num_episodes=100, save_path=savePath, load_path=loadPath)
+        train_dqn_agent(test_weapons, make_training_data(threat_count), num_episodes=100, save_path=savePath, load_path=loadPath)
     else:
         train_dqn_agent(test_weapons, None, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
     return savePath
