@@ -2,41 +2,32 @@ from algorithms.dqn_agent import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
+import torch
+torch.zeros(1).cuda()
 
-
-threatFileLocation="./dataFiles/threat_location.csv"
-weaponFileLocation="./dataFiles/weapon_data.csv"
-
+threatFileLocation="python/dataFiles/threat_location.csv"
+weaponFileLocation="python/dataFiles/weapon_data.csv"
+dqnModelPath = "python/dataFiles/trained_model.zip"
 
 def selectAlgorithm():
-    dqn_model_path = None
     algorithmChoice = input("""
     Please Input 1 - 4 to Select Algorithm:
     ---------------------------------------
-    1: Deep Q Network
-    2: Genetic Algorithm
-    3: Munkres (Hungarian)
-    4: Simulated Annealing \n""")
-
-
-# # If running python 3.10, use better match case vs elif
-# match algorithmChoice:
-#     case "1":
-#         dqn_model_path = runDQN(loadPath=dqn_model_path)
-#     case "2":
-#         runGA(threatFileLocation=threatFileLocation)
-#     case "3":
-#         runMunkres(threatFileLocation=threatFileLocation,weaponFileLocation=weaponFileLocation)
-#     case "4":
-#         runSimulatedAnnealing
+    1: Deep Q Network (Train)
+    2: Deep Q Network (Test)
+    3: Genetic Algorithm
+    4: Munkres (Hungarian)
+    5: Simulated Annealing \n""")
 
     if algorithmChoice == "1":
-        dqn_model_path = runDQN(loadPath=dqn_model_path)
+        runDQN(savePath=dqnModelPath, train=True)
     elif algorithmChoice == "2":
-        runGA(threatFileLocation=threatFileLocation)
+        runDQN(loadPath=dqnModelPath, train=False)
     elif algorithmChoice == "3":
-        runMunkres(threatFileLocation=threatFileLocation,weaponFileLocation=weaponFileLocation)
+        runGA(threatFileLocation=threatFileLocation)
     elif algorithmChoice == "4":
+        runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+    elif algorithmChoice == "5":
         runSimulatedAnnealing
     
 selectAlgorithm()

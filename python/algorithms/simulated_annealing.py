@@ -15,7 +15,7 @@ fast_missile_info = ['fast missile', 0.25, 0.35, 0.15, 0.90]
  #populates function inputs and input position
 function_inputs = []
 inputs_position = []
-with open('dataFiles/threat_location.csv', 'r') as threats:
+with open('python/dataFiles/threat_location.csv', 'r') as threats:
     inputs = threats.readlines()
     for line in inputs:
         as_list = line.split(',')
