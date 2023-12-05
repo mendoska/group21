@@ -5,7 +5,7 @@ import numpy as np
 import math
 import random
 import csv
-
+from icecream import ic
 
 # DEFINE WEAPON ATTRIBUTES
 class Weapon:
@@ -143,7 +143,7 @@ def proximity(weapon, threat):
 
 
 # Train agent on random threats
-def make_training_data(num_threats=10):
+def make_training_data(num_threats=15):
     threats = []
     threat_names = ["bomber", "fighter", "slow missile", "fast missile"]
     for i in range(num_threats):
@@ -197,6 +197,7 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
     rewards_over_time = []
     # Keep track of leakers
     leaker_count = 0
+    response = []
 
     for episode in range(num_episodes):
         # Reset environment
@@ -212,6 +213,7 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             # Print weapon assignments for current threat
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
+            
             print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
 
             # Identify leakers

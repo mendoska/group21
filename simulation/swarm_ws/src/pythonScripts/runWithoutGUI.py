@@ -2,6 +2,7 @@ from icecream import ic
 from fakeSimulationFunctions import simulateAddingDrone, writeDictToCSV
 from Models.Drone import Drone
 from bridge import selectAlgorithm
+from time import time
 
 
 def getUserInput(prompt:str, expectedType):
@@ -17,11 +18,11 @@ def main():
     
 
 
-    ic("                   Welcome to the BOWSER Prototype")
+    print("                                Welcome to the BOWSER Prototype ---- DEMO ---- ")
     
     
     numberOfDrones = getUserInput(prompt="""
-                           Please enter a number of drones to simulate ( Max: 20 )
+                           Please enter a number of drones to simulate ( Max: 15 )
                            """, expectedType=int)
         
     
@@ -32,7 +33,7 @@ def main():
                             2: Genetic Algorithm
                             3: Munkres (Hungarian)
                             4: Simulated Annealing
-                            """, expectedType=int)
+                            """, expectedType=int)+1
 
     print(f"You have selected {numberOfDrones} Drones")
     ic(algorithmChoice)
@@ -56,13 +57,22 @@ def main():
     
     
     ic("Call Algorithm - Currently Using Template Threat Locations For Sake of Presentation")
+    startTime = time()
+    # If they chose to run DQN, first it trains a model, then runs it, requiring two algorithm calls
+    if algorithmChoice == 2:
+        selectAlgorithm(algorithmChoice=algorithmChoice-1)
     results = selectAlgorithm(algorithmChoice=algorithmChoice)
+    finishTime = time()
+    
+    ic("Handle Drones in Simulation According to Algorithm Results") 
     
     ic("Calculate Simulation Leaker Percentage")
+    # ic(results)
     print("Returned Output")
     ic(results["Weapon Selection"])
     print(" \n\n            -------------------------------------------------------------------------------------------------")
     print(f"            Simulated Leaker Percentage: XX.XX% | Algorithm Percentage: {results['Leaker Percentage']}%\n\n\n")
+    print(f"                                      That Took {finishTime-startTime} Seconds")
 
 if __name__ == "__main__":
     main()

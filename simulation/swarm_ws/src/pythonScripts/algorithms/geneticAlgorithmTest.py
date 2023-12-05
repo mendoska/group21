@@ -161,8 +161,8 @@ def runGA(threatFileLocation):
             global response
             response={"Weapon Selection":tempList, "Leaker Percentage":(1-ga_instance.best_solution()[1])}    
 
-
-
+    global response
+    response = {}
     num_generations = 100
     num_parents_mating = 10
 
@@ -198,5 +198,6 @@ def runGA(threatFileLocation):
                            mutation_percent_genes=mutation_percent_genes,
                            on_generation=on_gen,
                            stop_criteria=f"saturate_{num_generations}")
-    return ga_instance.run()
+    ga_instance.run()
+    return response
 # ga_instance.plot_fitness()
