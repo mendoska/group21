@@ -1,12 +1,12 @@
 # Python Ignored Files
 
-python/*/.idea
-python/*/__pycache__
-python/*/*/__pycache__
-python/*/.DS_Store
+**/.idea
+**/__pycache__
+**/*/__pycache__
+**/.DS_Store
 
-python/dataFiles/trained_model.zip
-python/dataFiles/Weapons_and_Test_Threats.xlsx
+**/dataFiles/trained_model.zip
+**/dataFiles/Weapons_and_Test_Threats.xlsx
 
 # python/*/Tests
 

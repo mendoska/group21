@@ -4,6 +4,11 @@ One Paragraph of project description goes here
 
 ## Getting Started
 
+When installing the droneControllerDev, you must alter 
+ROS2swarm/src/launch_gazebo/launch_gazebo/add_bot_node.py,
+ROS2swarm/src/launch_gazebo/launch/add_robot.launch.py
+
+
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
