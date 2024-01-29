@@ -138,7 +138,6 @@ def munkres(threat_file, weapon_file, pk):
     
     # print(f"SELECTED WEAPONS: {output}")
     print(f"LEAKER PERCENTAGE {(leaker_count / threat_count) * 100}%")
-    return nameoutput
     # write_output_to_csv(nameoutput, "output_results.csv")
 
 def write_output_to_csv(output, output_filename):
