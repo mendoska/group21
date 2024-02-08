@@ -3,7 +3,7 @@ import numpy as np
 from random import choices
 import math
 import pygad
-
+import time 
 
 def runGA(threatFileLocation):
 
@@ -39,6 +39,10 @@ def runGA(threatFileLocation):
     def fitness_func(ga_instance, solution, solution_idx):
         success_count = 0
         weapons_quantity = [8, 20, 25, 10]
+        #Initialize last fire times for each weapon
+        last_fire_times = [0] * len(weapons_quantity)
+        #Cooldown time in seconds
+        cooldown_time = 5
         for threat in range(len(function_inputs)):
             if solution[threat] == 0:
                 solution[threat] = 1
@@ -50,6 +54,15 @@ def runGA(threatFileLocation):
                 check = float(inputs_position[threat][3])
                 if curr_distance < float(inputs_position[threat][3]):
                     continue
+    #Cooldown system implementation 
+    #Get current time 
+                current_time = time.time()
+    #Chech if the cooldown time has passed 
+                if current_time < last_fire_times[solution[threat]-1] + cooldown_time:
+                    continue
+                else:
+    #Update the last fire time for the weapon used
+                    last_fire_times[solution[threat]-1] = current_time
     # Weapon quantity constraint implementation
                 if weapons_quantity[solution[threat]-1] <= 0:
                     continue
