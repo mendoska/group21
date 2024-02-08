@@ -4,19 +4,20 @@ One Paragraph of project description goes here
 
 ## Getting Started
 
-When installing the droneControllerDev, you must alter 
-ROS2swarm/src/launch_gazebo/launch_gazebo/add_bot_node.py,
-ROS2swarm/src/launch_gazebo/launch/add_robot.launch.py
-
-
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
 
 What things you need to install the software and how to install them
 
+Required python packages thus far:
 ```
-Give examples
+customtkinter
+gym
+stable-baselines3
+pygad
+scipy
+shimmy
 ```
 
 ### Installing
@@ -25,11 +26,11 @@ A step by step series of examples that tell you how to get a development env run
 
 Say what the step will be
 
+- Within simulation/swarm_ws, run
 ```
-Give the example
+git clone https://github.com/sdegefa/ROS2swarm_B
 ```
 
-And repeat
 
 ```
 until finished

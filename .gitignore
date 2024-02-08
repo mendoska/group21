@@ -15,9 +15,9 @@
 
 #  Simulation Ignored Files
 
-simulation/**/.vscode
-simulation/**/ROS2swarm
-simulation/**/rosbag_*
-simulation/**/log
-simulation/**/build  
-simulation/**/install
+**/.vscode
+**/ROS2swarm_B
+**/rosbag_*
+**/log
+**/build  
+**/install
