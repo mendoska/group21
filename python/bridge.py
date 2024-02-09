@@ -2,6 +2,7 @@ from algorithms.dqn_agent import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
+##import cProfile
 ##import torch
 ##torch.zeros(1).cuda()
 
