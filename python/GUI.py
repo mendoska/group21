@@ -67,7 +67,6 @@ threatScale.pack(pady=10)
 currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threatVar.get()}")
 currentThreatLabel.pack(pady=5)
 
-
 submitButton = ctk.CTkButton(root, text="Start", command=submit)
 submitButton.pack(pady=5)
 
