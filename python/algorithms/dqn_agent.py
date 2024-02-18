@@ -7,7 +7,7 @@ import random
 import csv
 import logging
 
-
+threatFileLocation = "dataFiles/threat_location.csv"
 # Set up logging
 logging.basicConfig(filename='training.log', level=logging.INFO, filemode='w')
 
@@ -77,22 +77,19 @@ class BattleEnv(Env):
     def __init__(self, weapons, threats):
         self.weapons, self.num_weapons = weapons, len(weapons)
         self.threats, self.num_threats = threats, len(threats)
-
         # Simplify state space: Each element in the state array represents a threat, 
         # and its value is the index of the weapon assigned to it, -1 if no weapon is assigned
         self.state = np.full(self.num_threats, -1, dtype=int)
         # Action space is the product of the number of weapons and the number of threats
         self.action_space = spaces.Discrete(self.num_weapons * self.num_threats)
-        self.current_threat = 0
         # Observation space: Vector with length equal to number of threats,
         # where each element is -1 if the threat is unassigned, or the index of the assigned weapon
-        self.update_observation_space()
+        self.observation_space = spaces.Box(low=-1, high=self.num_weapons-1, shape=(self.num_threats,), dtype=np.int32)
         # Keep track of current threat index
+        self.current_threat = 0
         
-
     def update_observation_space(self):
         self.observation_space = spaces.Box(low=-1, high=self.num_weapons-1, shape=(self.num_threats,), dtype=np.int32)
-
 
     # Reset environment to initial state
     def reset(self):
@@ -244,7 +241,8 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             model.save(save_path)
     logging.info(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
     logging.info("=========================================================")
-    return model, rewards_over_time
+    leaker_percentage = (leaker_count / (env.num_threats * num_episodes)) * 100
+    return model, rewards_over_time, leaker_percentage
 
 
 # START TRAINING PROCESS
@@ -259,15 +257,20 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
                 Weapon("short range missile", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), srm_pk),
                 Weapon("directed energy", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), de_pk)]
 
-threat_count = count_threats("dataFiles/threat_location.csv")
+# threat_count = count_threats("python/dataFiles/threat_location.csv")
 
 # Train DQN agent and save it to "trained_model.zip" for future use
-def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True):
+def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, num_threats=None):
+    leaker_percentage = 0
     if train:
-        train_dqn_agent(test_weapons, make_training_data(threat_count), num_episodes=100, save_path=savePath, load_path=loadPath)
+        if num_threats is None:
+            raise ValueError("Number of threats must be provided before training")
+        threat_data = make_training_data(num_threats)
+        train_dqn_agent(test_weapons, threat_data, num_episodes=100, save_path=savePath, load_path=loadPath)
     else:
-        train_dqn_agent(test_weapons, None, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
-    return savePath
+        threat_data = use_testing_data(threatFileLocation)
+        model, rewards, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
+    return savePath, leaker_percentage
 
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")

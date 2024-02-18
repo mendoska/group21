@@ -3,11 +3,13 @@ from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
 from tkinter import *
+from PIL import Image
 import customtkinter as ctk
 import tkinter as tk
 import pandas as pd
 import random 
 import time
+import csv
 
 masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
@@ -21,8 +23,16 @@ root = ctk.CTk()
 root.title('B.O.W.S.E.R.')
 root.geometry('1000x600')
 
+# Read the number of inputs 
+def count_threats(threat_file):
+    with open(threat_file, 'r') as file:
+        reader = csv.reader(file)
+        threats = list(reader)
+        return len(threats)
 
 def submit():
+    outputLabel.configure(text="")
+
     rangemin = int(rminEntry.get())
     rangemax = int(rmaxEntry.get())
     algorithm = algoDropdown.get()
@@ -30,23 +40,38 @@ def submit():
     
     columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
     df = pd.read_csv(masterTemplate, header=None, names=columns)
-    limited_df = df.head(num_threats)
+    limited_df = df.sample(num_threats)
     limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
     limited_df.to_csv(threatFileLocation, index=False, header=False)
 
     time.sleep(3)
     if algorithm == "DQN":
-        runDQN(savePath=dqnModelPath, train=True)
-        runDQN(loadPath=dqnModelPath, train=False)
+        current_num_threats = count_threats(threatFileLocation)
+        runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
+        time.sleep(3)
+        save_path, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False)
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
+
     elif algorithm == "Genetic Algorithm":
-        runGA(threatFileLocation=threatFileLocation)
+        leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+        outputLabel.configure(text=f"Leaker Percentage: {1.00 - leaker_percentage}%")
+
     elif algorithm == "Munkres":
-        runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+        leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+
     elif algorithm == "Simulated Annealing":
-        runSimulatedAnnealing()
+        leaker_percentage = runSimulatedAnnealing()
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage * 100}%")
 
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
+
+logo = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(150,150))
+logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
+
+title = ctk.CTkLabel(root,text="B.O.W.S.E.R.",font=("Rockwell Extra Bold",50))
+title.pack(pady=40)
 
 rLabel = ctk.CTkLabel(root, text="Range")
 rLabel.pack(pady=5)
@@ -69,5 +94,8 @@ currentThreatLabel.pack(pady=5)
 
 submitButton = ctk.CTkButton(root, text="Start", command=submit)
 submitButton.pack(pady=5)
+
+outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
+outputLabel.pack(side="bottom", pady=10)
 
 root.mainloop()

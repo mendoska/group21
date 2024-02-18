@@ -138,8 +138,9 @@ def munkres(threat_file, weapon_file, pk):
     
     # print(f"SELECTED WEAPONS: {output}")
     print(f"LEAKER PERCENTAGE {(leaker_count / threat_count) * 100}%")
-    return nameoutput
     # write_output_to_csv(nameoutput, "output_results.csv")
+    leaker_percentage = (leaker_count / threat_count) * 100
+    return leaker_percentage
 
 def write_output_to_csv(output, output_filename):
     with open(output_filename, 'w', newline='') as csv_file:
@@ -155,9 +156,11 @@ def write_output_to_csv(output, output_filename):
 #          FM [?, ?, ?, ?]
 # run algorithm
 def runMunkres(threatFileLocation, weaponFileLocation):
+    leaker_percentage = 0
     pk_dict = {"bomber": [0.95, 0.85, 0.95, 0.99],
             "fighter": [0.65, 0.90, 0.75, 0.99],
             "slow missile": [0.75, 0.95, 0.90, 0.99],
             "fast missile": [0.25, 0.35, 0.15, 0.90]}
-    return munkres(threatFileLocation, weaponFileLocation, pk_dict)
+    leaker_percentage = munkres(threatFileLocation, weaponFileLocation, pk_dict)
+    return leaker_percentage
     
