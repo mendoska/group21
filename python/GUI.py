@@ -54,7 +54,8 @@ def submit():
 
     elif algorithm == "Genetic Algorithm":
         leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-        outputLabel.configure(text=f"Leaker Percentage: {1.00 - leaker_percentage}%")
+        leaker_percentage = (1.00 - leaker_percentage) * 100
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
 
     elif algorithm == "Munkres":
         leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
@@ -62,7 +63,34 @@ def submit():
 
     elif algorithm == "Simulated Annealing":
         leaker_percentage = runSimulatedAnnealing()
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage * 100}%")
+        leaker_percentage = leaker_percentage * 100
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+
+    rwin = ctk.CTk()
+    rwin.title('Your Result')
+    rwin.geometry('700x500')
+
+    num_leakers = int(num_threats * leaker_percentage * 0.01)
+
+    rTitle = ctk.CTkLabel(rwin,text=algorithm,font=("Rockwell Extra Bold",50))
+    rTitle.pack(pady=40)
+
+    rTheatsLabel = ctk.CTkLabel(rwin,text="Threats",font=("Helvetica",20))
+    rTheatsLabel.pack(pady=5)
+    rTheats = ctk.CTkLabel(rwin,text=num_threats,font=("Helvetica",15), bg_color= "red")
+    rTheats.pack(pady=20)
+
+    rleakersLabel = ctk.CTkLabel(rwin,text="Leakers",font=("Helvetica",20))
+    rleakersLabel.pack(pady=5)
+    rleakersLabel = ctk.CTkLabel(rwin,text=num_leakers,font=("Helvetica",15), bg_color= "red")
+    rleakersLabel.pack(pady=20)
+
+    rleakerPercentageLabel = ctk.CTkLabel(rwin,text="Leaker percentage",font=("Helvetica",20))
+    rleakerPercentageLabel.pack(pady=5)
+    rleakerPercentageLabel = ctk.CTkLabel(rwin,text=f"{leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
+    rleakerPercentageLabel.pack(pady=20)
+
+    rwin.mainloop()
 
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
