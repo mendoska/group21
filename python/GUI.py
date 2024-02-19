@@ -51,20 +51,24 @@ def submit():
         time.sleep(3)
         save_path, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False)
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
+        dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
 
     elif algorithm == "Genetic Algorithm":
         leaker_percentage = runGA(threatFileLocation=threatFileLocation)
         leaker_percentage = (1.00 - leaker_percentage) * 100
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+        gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
 
     elif algorithm == "Munkres":
         leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+        mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
 
     elif algorithm == "Simulated Annealing":
         leaker_percentage = runSimulatedAnnealing()
         leaker_percentage = leaker_percentage * 100
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+        sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -125,5 +129,21 @@ submitButton.pack(pady=5)
 
 outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
 outputLabel.pack(side="bottom", pady=10)
+
+dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: not run yet", wraplength=200)
+dleaker.pack(side="right")
+dleaker.place(x=800,y=150)
+
+gleaker = ctk.CTkLabel(root, text="Genetic Algorithm: not run yet", wraplength=200)
+gleaker.pack(side="right")
+gleaker.place(x=800,y=190)
+
+mleaker = ctk.CTkLabel(root, text="Munkres Algorithm: not run yet", wraplength=200)
+mleaker.pack(side="right")
+mleaker.place(x=800,y=230)
+
+sleaker = ctk.CTkLabel(root, text="Simulated Annealing: not run yet", wraplength=200)
+sleaker.pack(side="right")
+sleaker.place(x=800,y=270)
 
 root.mainloop()
