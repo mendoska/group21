@@ -4,8 +4,15 @@ import asyncio
 import subprocess
 
 
-response =  asyncio.run(startEmptyGazeboWorldSimulation(totalNumberOfDrones=5))
+worldCreationProcess = startEmptyGazeboWorldSimulation(totalNumberOfDrones=2)
+line = worldCreationProcess.stdout.readline()
 
-ic(response)
+while(not line.startswith("[INFO] [ground_truth_publisher-2]: process started with pid")):
+    ic(line)
+    line = worldCreationProcess.stdout.readline()
+    
+ic("World Created")
+    
+
 
 

@@ -18,6 +18,7 @@ stable-baselines3
 pygad
 scipy
 shimmy
+colcon
 ```
 
 ### Installing
@@ -29,6 +30,9 @@ Say what the step will be
 - Within simulation/swarm_ws, run
 ```
 git clone https://github.com/sdegefa/ROS2swarm_B
+cd ROS2swarmB
+pipenv install
+colcon build
 ```
 
 

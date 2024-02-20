@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+customtkinter = "*"
+gym = "*"
+stable-baselines3 = "*"
+pygad = "*"
+scipy = "*"
+shimmy = "*"
+icecream = "*"
+pyyaml = "*"
+empy = "==3.3.4"
+catkin_pkg = "*"
+lark = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

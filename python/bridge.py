@@ -28,4 +28,4 @@ def selectAlgorithm():
     elif algorithmChoice == "4":
         runSimulatedAnnealing
     
-selectAlgorithm()   
+# selectAlgorithm()   

@@ -2,31 +2,38 @@ import subprocess
 from yaml import safe_load
 from icecream import ic
 from random import random
+from math import atan2, pi
 
-async def runAsyncCommand(command:str) -> str:
+def runAsyncCommand(command:str) -> str:
     try:
         ic()
         # Run the Zsh command
-        result = subprocess.run(
+        process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-            executable='/bin/bash'  # Specify the Zsh executable
+            executable='/bin/zsh'  # Specify the Zsh executable
         )
+        ic("Process Started")
+        return process
 
-        # Check if the command was successful
-        if result.returncode == 0:
-            # Return the standard output
-            return result.stdout.strip()
-        else:
-            # If the command failed, raise an exception or handle the error
-            raise subprocess.CalledProcessError(result.returncode, result.stderr)
+        # # Check if the command was successful
+        # if result.returncode == 0:
+        #     # Return the standard output
+        #     return result.stdout.strip()
+        # else:
+        #     # If the command failed, raise an exception or handle the error
+        #     raise subprocess.CalledProcessError(result.returncode, result.stderr)
     except Exception as e:
         # Handle exceptions, if any
         print(f"An error occurred: {e}")
         return None
+    
+    
+    
+    
 
 def runSyncCommand(command:str) -> str:
     try:
@@ -38,8 +45,7 @@ def runSyncCommand(command:str) -> str:
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-            timeout=2,
-            executable='/bin/bash'  # Specify the Zsh executable
+            executable='/bin/zsh'  # Specify the Zsh executable
         )
 
         # Check if the command was successful
@@ -49,7 +55,8 @@ def runSyncCommand(command:str) -> str:
         else:
             # If the command failed, raise an exception or handle the error
             raise subprocess.CalledProcessError(result.returncode, result.stderr)
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
+        ic(e)
         ic("Drone Created and Process Killed")
         return 1
     except Exception as e:  
@@ -59,21 +66,39 @@ def runSyncCommand(command:str) -> str:
 
 # add drone to simulation
 """ return created Location """
-def addDroneToSimulation(droneID:int) -> list:
-    addDroneCommand = f"""ROS_DOMAIN_ID=42 ros2 launch launch_gazebo add_robot.launch.py \
-                          start_index:={droneID} \
-                          gazebo_world:=arena_large.world \
-                          pattern:=drive_pattern \
-                          number_robots:=1 \
-                          log_level:=info \
-                          robot:=burger \
-                          sensor_type:=lidar \
-                          version:=2 \
-                          x_start:={1.0+droneID} \
-                          x_dist:=0.5 \
-                          y_start:=0.0 \
-                          y_dist:=1.0 \
-                          driving_swarm:=False \
+def addDroneToSimulation(droneID:int, spawnCoordinateX:int, spawnCoordinateY:int) -> None:
+    yaw = atan2(spawnCoordinateY,spawnCoordinateX) + pi 
+    addDroneCommand = f"""
+                        source ../simulation/swarm_ws/ROS2swarm_B/install/setup.zsh &&
+                        ROS_DOMAIN_ID=42 ros2 launch launch_gazebo add_robot.launch.py \
+                        start_index:={droneID} \
+                        gazebo_world:=empty.world \
+                        pattern:=drive2OriginPattern \
+                        number_robots:=1 \
+                        log_level:=info \
+                        robot:=waffle_pi \
+                        sensor_type:=lidar \
+                        version:=2 \
+                        x_start:={spawnCoordinateX} \
+                        x_dist:=0.5 \
+                        y_start:={spawnCoordinateY} \
+                        y_dist:=1.0 \
+                        yaw:={yaw} \
+                        driving_swarm:=False
+                     """
+
+    return runAsyncCommand(command=addDroneCommand)
+    # if runSyncCommand(command=addDroneCommand) == 1:
+    #     ic("Drone Created")
+    #     return 1
+    # else:
+    #     ic(f"Error While Adding Drone {droneID} To Simulation")
+    #     return 0
+
+""" return created Location """
+def add1DroneToSimulation(droneID:int) -> list:
+    # yaw = atan2(spawnCoordinateY,spawnCoordinateX) + pi 
+    addDroneCommand = f""" zsh ../simulation/swarm_ws/ROS2swarm_B/add_robots_to_simulation.sh
                           """
     if runSyncCommand(command=addDroneCommand) == 1:
         ic("Drone Created")
@@ -114,6 +139,11 @@ def getDroneLocation(droneID: int) -> dict:
         return 0
 
 
+def issueStartCommand() -> None:
+    startCommand = "zsh ../simulation/swarm_ws/ROS2swarm_B/start_command.sh"
+    runSyncCommand(command=startCommand)
+    return
+
 
 # remove drone from simulation
 """ return 'destroyed' location  """
@@ -126,6 +156,11 @@ def destroyDrone(droneID: int) -> list:
 
     return [locationList, confirmation]
     """
+    delRobotModel = f"""ros2 service call /delete_entity gazebo_msgs/srv/DeleteEntity '{{name: "robot_{droneID}"}}' """
+    if (commandResponse:=runSyncCommand(command=delRobotModel)) is not None: 
+        status_message = commandResponse.split("status_message")[1] # Isolates just the status message portion
+        status_message = status_message[2:len(status_message)-2].replace("[","").replace("]","").replace("_"," ") # more formatting to make it prettier
+        ic(status_message)
     pass
 
     
@@ -150,8 +185,11 @@ def startDrone(droneID:int) -> str:
 
 
 # Start World Simulation
-async def startEmptyGazeboWorldSimulation(totalNumberOfDrones:int) -> None:
+def startEmptyGazeboWorldSimulation(totalNumberOfDrones:int) -> subprocess.Popen:
     startWorldCommand = f"""
+            cd ../simulation/swarm_ws/ROS2swarm_B &&
+            colcon build --symlink-install &&
+            source ./install/setup.zsh &&
             ROS_DOMAIN_ID=42 ros2 launch launch_gazebo create_enviroment.launch.py \
             gazebo_world:=empty.world \
             pattern:=drive_pattern \
@@ -167,12 +205,9 @@ async def startEmptyGazeboWorldSimulation(totalNumberOfDrones:int) -> None:
             driving_swarm:=False \
             logging:=False 
             """
- 
-    if (commandResponse:= await runAsyncCommand(command=startWorldCommand)) is not None:
-        ic(commandResponse)
-    else:
-        ic(f"Error While Creating World With {totalNumberOfDrones} Drones")
-        return 0
+    return runAsyncCommand(command=startWorldCommand)
+
+    
  
  
     
