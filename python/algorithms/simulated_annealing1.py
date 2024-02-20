@@ -51,7 +51,7 @@ def simulated_annealing(initial_state):
         current_temp -= alpha
     print_results(function_inputs, solution)
     print(leak_percent(solution))
-    return solution, leak_percent(solution)
+    return solution
 
 def leak_percent(state):
     success_count = 0
@@ -199,9 +199,7 @@ def print_results(function_input, solution):
     print()
 
 def runSimulatedAnnealing():
-    leaker_percentage = 0
     initial_solution = []
     for i in range(50):
         initial_solution.append(random.randint(1, 4))
-    solution, leaker_percentage = simulated_annealing(initial_solution)
-    return leaker_percentage
+    return simulated_annealing(initial_solution)
