@@ -1,23 +1,26 @@
 # Python Ignored Files
 
-python/*/.idea
-python/*/__pycache__
-python/*/*/__pycache__
-python/*/.DS_Store
+**/.idea
+**/__pycache__/
+**/*/__pycache__
+**/.DS_Store
 
-python/dataFiles/trained_model.zip
-python/dataFiles/Weapons_and_Test_Threats.xlsx
+**/dataFiles/trained_model.zip
+**/dataFiles/Weapons_and_Test_Threats.xlsx
 
 # python/*/Tests
 
 
+# python/*/Tests
+**/pythonScripts/UsingDroneController.py
 
 
+# simulation
 #  Simulation Ignored Files
 
-simulation/**/.vscode
-simulation/**/ROS2swarm
-simulation/**/rosbag_*
-simulation/**/log
-simulation/**/build  
-simulation/**/install
+**/.vscode
+**/ROS2swarm_B
+**/rosbag_*
+**/log
+**/build  
+**/install
