@@ -10,8 +10,15 @@ These instructions will get you a copy of the project up and running on your loc
 
 What things you need to install the software and how to install them
 
+Required python packages thus far:
 ```
-Give examples
+customtkinter
+gym
+stable-baselines3
+pygad
+scipy
+shimmy
+colcon
 ```
 
 ### Installing
@@ -20,11 +27,14 @@ A step by step series of examples that tell you how to get a development env run
 
 Say what the step will be
 
+- Within simulation/swarm_ws, run
 ```
-Give the example
+git clone https://github.com/sdegefa/ROS2swarm_B
+cd ROS2swarmB
+pipenv install
+colcon build
 ```
 
-And repeat
 
 ```
 until finished

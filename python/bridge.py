@@ -13,11 +13,11 @@ def selectAlgorithm():
     algorithmChoice = input("""
     Please Input 1 - 4 to Select Algorithm:
     ---------------------------------------
-    1: Deep Q Network (Train)
-    2: Deep Q Network (Test)
-    3: Genetic Algorithm
-    4: Munkres (Hungarian)
-    5: Simulated Annealing \n""")
+    1: Deep Q Network
+    2: Genetic Algorithm
+    3: Munkres (Hungarian)
+    4: Simulated Annealing \n""")
+
 
     if algorithmChoice == "1":
         runDQN(savePath=dqnModelPath, train=True)
@@ -30,4 +30,4 @@ def selectAlgorithm():
     elif algorithmChoice == "5":
         runSimulatedAnnealing()
     
-selectAlgorithm()
+# selectAlgorithm()   
