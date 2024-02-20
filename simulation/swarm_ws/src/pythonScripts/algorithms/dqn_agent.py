@@ -7,6 +7,7 @@ import random
 import csv
 from icecream import ic
 
+
 # DEFINE WEAPON ATTRIBUTES
 class Weapon:
     def __init__(self, name, x, y, z, max_range, speed, pk):
@@ -213,7 +214,8 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             # Print weapon assignments for current threat
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
-            
+            if use_actual_data:
+                response.append(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
             print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
 
             # Identify leakers
@@ -239,7 +241,12 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             model.save(save_path)
     print(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
     print("=========================================================")
-    return model, rewards_over_time
+    
+    # ic(current_threat)
+    if use_actual_data:
+        return {"Weapon Selection": response, "Leaker Percentage":(leaker_count / (env.num_threats * num_episodes)) * 100}
+    else:
+        return model, rewards_over_time
 
 
 # START TRAINING PROCESS
@@ -260,9 +267,9 @@ threat_count = count_threats("dataFiles/threat_location_dqn.csv")
 def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True):
     if train:
         train_dqn_agent(test_weapons, make_training_data(threat_count), num_episodes=100, save_path=savePath, load_path=loadPath)
+        return savePath
     else:
-        train_dqn_agent(test_weapons, None, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
-    return savePath
+        return train_dqn_agent(test_weapons, None, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
 
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")

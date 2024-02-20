@@ -2,14 +2,14 @@ from algorithms.dqn_agent import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
+##import torch
+##torch.zeros(1).cuda()
 
-
-threatFileLocation="./dataFiles/threat_location.csv"
-weaponFileLocation="./dataFiles/weapon_data.csv"
-
+threatFileLocation="dataFiles/threat_location.csv"
+weaponFileLocation="dataFiles/weapon_data.csv"
+dqnModelPath = "dataFiles/trained_model.zip"
 
 def selectAlgorithm():
-    dqn_model_path = None
     algorithmChoice = input("""
     Please Input 1 - 4 to Select Algorithm:
     ---------------------------------------
@@ -20,12 +20,14 @@ def selectAlgorithm():
 
 
     if algorithmChoice == "1":
-        dqn_model_path = runDQN(loadPath=dqn_model_path)
+        runDQN(savePath=dqnModelPath, train=True)
     elif algorithmChoice == "2":
-        runGA(threatFileLocation=threatFileLocation)
+        runDQN(loadPath=dqnModelPath, train=False)
     elif algorithmChoice == "3":
-        runMunkres(threatFileLocation=threatFileLocation,weaponFileLocation=weaponFileLocation)
+        runGA(threatFileLocation=threatFileLocation)
     elif algorithmChoice == "4":
-        runSimulatedAnnealing
+        runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+    elif algorithmChoice == "5":
+        runSimulatedAnnealing()
     
 # selectAlgorithm()   

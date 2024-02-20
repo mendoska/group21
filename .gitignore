@@ -1,7 +1,7 @@
 # Python Ignored Files
 
 **/.idea
-**/__pycache__
+**/__pycache__/
 **/*/__pycache__
 **/.DS_Store
 
@@ -11,8 +11,11 @@
 # python/*/Tests
 
 
+# python/*/Tests
+**/pythonScripts/UsingDroneController.py
 
 
+# simulation
 #  Simulation Ignored Files
 
 **/.vscode
