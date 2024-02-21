@@ -46,8 +46,8 @@ def submit():
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
     
-    simulation_leaker_percent = 0.0
-    algorithm_leaker_percentage = 0.0
+    simulation_leaker_percent = 10.0
+    algorithm_leaker_percentage = 20.0
     #simulation_leaker_percent, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
 
     columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
@@ -105,10 +105,20 @@ def submit():
     rleakersLabel = ctk.CTkLabel(rwin,text=num_leakers,font=("Helvetica",15), bg_color= "red")
     rleakersLabel.pack(pady=20)
 
-    rleakerPercentageLabel = ctk.CTkLabel(rwin,text="Leaker percentage",font=("Helvetica",20))
-    rleakerPercentageLabel.pack(pady=5)
-    rleakerPercentageLabel = ctk.CTkLabel(rwin,text=f"{leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
-    rleakerPercentageLabel.pack(pady=20)
+    rActualLeakageLabel = ctk.CTkLabel(rwin,text="Actual Leakage",font=("Helvetica",20))
+    rActualLeakageLabel.pack(side="left", padx=5)
+    rActualLeakage = ctk.CTkLabel(rwin,text=f"{simulation_leaker_percent}%",font=("Helvetica",15), bg_color= "red")
+    rActualLeakage.pack(side="left", padx=20)
+
+    rPredictedLeakageLabel = ctk.CTkLabel(rwin,text="Predicted Leakage",font=("Helvetica",20))
+    rPredictedLeakageLabel.pack(side="right", padx=5)
+    rPredictedLeakage = ctk.CTkLabel(rwin,text=f"{algorithm_leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
+    rPredictedLeakage.pack(side="right", padx=20)
+
+    # rleakerPercentageLabel = ctk.CTkLabel(rwin,text="Leaker percentage",font=("Helvetica",20))
+    # rleakerPercentageLabel.pack(pady=5)
+    # rleakerPercentageLabel = ctk.CTkLabel(rwin,text=f"{leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
+    # rleakerPercentageLabel.pack(pady=20)
 
     rwin.mainloop()
 
