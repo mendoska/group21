@@ -17,7 +17,7 @@ def fired(ind_to_weapon, weapon_ind):
 
 
 # print best solution and consider weapon strategy
-def update_results(threat, ind_to_weapon, cost, row_ind, col_ind):
+def update_results(threat, ind_to_weapon, cost, row_ind, col_ind,):
     output = []
     threat_name = []
     # print results
@@ -128,19 +128,19 @@ def munkres(threat_file, weapon_file, pk):
             threat = [row[0], float(row[1]), float(row[2]),
                       float(row[3]), float(row[4]), float(row[5]), row[6]]
             for weapon_ind, weapon in enumerate(ind_to_weapon):
-                pk_matrix.append([pk[threat[0]][weapon_ind]])
+                pk_matrix.append([pk["fighter"][weapon_ind]])
             cost = calc_cost(np.array(pk_matrix), ind_to_weapon.values(), threat)
             row_ind, col_ind = linear_sum_assignment(cost)
             if is_leaker(cost[row_ind[0], col_ind[0]], ind_to_weapon[row_ind[0]][9]):  # count number of leakers
                 leaker_count += 1
             ##output += update_results(threat, ind_to_weapon, cost, row_ind, col_ind)
             nameoutput.append(update_results(threat, ind_to_weapon, cost, row_ind, col_ind))
-    
+            output.append([threat[0], [ind_to_weapon[row_ind[0]][0]]])
     # print(f"SELECTED WEAPONS: {output}")
     print(f"LEAKER PERCENTAGE {(leaker_count / threat_count) * 100}%")
     # write_output_to_csv(nameoutput, "output_results.csv")
     leaker_percentage = (leaker_count / threat_count) * 100
-    return leaker_percentage
+    return output, leaker_percentage
 
 def write_output_to_csv(output, output_filename):
     with open(output_filename, 'w', newline='') as csv_file:
@@ -161,6 +161,6 @@ def runMunkres(threatFileLocation, weaponFileLocation):
             "fighter": [0.65, 0.90, 0.75, 0.99],
             "slow missile": [0.75, 0.95, 0.90, 0.99],
             "fast missile": [0.25, 0.35, 0.15, 0.90]}
-    leaker_percentage = munkres(threatFileLocation, weaponFileLocation, pk_dict)
-    return leaker_percentage
+    output, leaker_percentage = munkres(threatFileLocation, weaponFileLocation, pk_dict)
+    return output, leaker_percentage
     

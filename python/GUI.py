@@ -10,6 +10,7 @@ import pandas as pd
 import random 
 import time
 import csv
+from app import run_BOWSER_simulation
 
 masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
@@ -30,45 +31,59 @@ def count_threats(threat_file):
         threats = list(reader)
         return len(threats)
 
-def submit():
+def submit():   
     outputLabel.configure(text="")
-
-    rangemin = int(rminEntry.get())
-    rangemax = int(rmaxEntry.get())
+    try:
+        rangemin = int(rminEntry.get())
+        rangemax = int(rmaxEntry.get())
+        if rangemin <= 0 or rangemax <= 0:
+            print("Invalid Range Provided")
+            return
+    except ValueError:
+        print("Invalid Range Provided")
+        return
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
     
-    columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
-    df = pd.read_csv(masterTemplate, header=None, names=columns)
-    limited_df = df.sample(num_threats)
-    limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
-    limited_df.to_csv(threatFileLocation, index=False, header=False)
+    simulation_leaker_percent, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
+    
+    
+    return # temp so that the entire thing doesnt explode
+    
+        
+    # columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
+    # df = pd.read_csv(masterTemplate, header=None, names=columns)
+    # limited_df = df.sample(num_threats)
+    # limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
+    # limited_df.to_csv(threatFileLocation, index=False, header=False)
 
     time.sleep(3)
-    if algorithm == "DQN":
-        current_num_threats = count_threats(threatFileLocation)
-        runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
-        time.sleep(3)
-        save_path, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False)
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
-        dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
+    # if algorithm == "DQN":
+    #     current_num_threats = count_threats(threatFileLocation)
+    #     runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
+    #     time.sleep(3)
+    #     response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
+    #     dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
+    #     print(response)
+    # elif algorithm == "Genetic Algorithm":
+    #     leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+    #     leaker_percentage = (1.00 - leaker_percentage) * 100
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
 
-    elif algorithm == "Genetic Algorithm":
-        leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-        leaker_percentage = (1.00 - leaker_percentage) * 100
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
+    # elif algorithm == "Munkres":
+    #     response, leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
+    #     print(response)
 
-    elif algorithm == "Munkres":
-        leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
-
-    elif algorithm == "Simulated Annealing":
-        leaker_percentage = runSimulatedAnnealing()
-        leaker_percentage = leaker_percentage * 100
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
+    # elif algorithm == "Simulated Annealing":
+    #     response, leaker_percentage = runSimulatedAnnealing()
+    #     leaker_percentage = leaker_percentage * 100
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
+    #     print(response)
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -119,7 +134,8 @@ algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
 
 threatVar = tk.IntVar(value=1)
-threatScale = ctk.CTkSlider(root, from_=1, to=50, variable=threatVar, command=updateThreatLabel)
+# My computer can only handle 10 threats before dropping below 50% of real time
+threatScale = ctk.CTkSlider(root, from_=1, to=10, variable=threatVar, command=updateThreatLabel)
 threatScale.pack(pady=10)
 currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threatVar.get()}")
 currentThreatLabel.pack(pady=5)

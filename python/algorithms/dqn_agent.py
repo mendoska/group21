@@ -124,7 +124,7 @@ class BattleEnv(Env):
             if weapon_index != -1:  # Check if weapon is assigned
                 weapon = self.weapons[weapon_index]
                 threat = self.threats[threat_index]
-                weapon_pk = weapon.get_pk()[threat.get_name()]
+                weapon_pk = weapon.get_pk()["bomber"]
                 reward = weapon_pk * proximity(weapon, threat)
                 total_reward += reward
         return total_reward
@@ -161,6 +161,7 @@ def count_threats(threat_file):
 # Test agent on threats from file
 def use_testing_data(threat_file):
     threats = []
+    
     with open(threat_file, 'r') as csv_file:
         threat_reader = csv.reader(csv_file)
         for row in threat_reader:
@@ -169,8 +170,8 @@ def use_testing_data(threat_file):
 
 
 # TRAIN DEEP Q-NETWORK TO SOLVE BATTLE ENV
-def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, load_path=None, use_actual_data=False):
-    env = BattleEnv(weapon_lst, use_testing_data("dataFiles/threat_location.csv") if use_actual_data else threat_lst)
+def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, load_path=None, use_actual_data=False, test=False, threat_file_path=None):
+    env = BattleEnv(weapon_lst, use_testing_data(threat_file_path) if use_actual_data else threat_lst)
 
     # Define hyperparameters
     policy_kwargs = dict(net_arch=[128, 128, 128])  # Specify NN architecture for agent: MLP with 3 hidden layers of 128 neurons
@@ -214,9 +215,10 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
             print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
-
+            if test:
+                response.append([current_threat, [weapon.get_name() for weapon in assigned_weapons]])
             # Identify leakers
-            combined_pk = sum([weapon.get_pk()[current_threat] for weapon in assigned_weapons])
+            combined_pk = sum([weapon.get_pk()["bomber"] for weapon in assigned_weapons])
             # 1 = leaker, 0 = non-leaker
             leaker_id = random.choices([0, 1], [combined_pk, 1 - combined_pk])[0]
             if leaker_id == 1:
@@ -230,15 +232,17 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward
-        logging.info("=========================================================")
-        logging.info(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
-        logging.info("=========================================================")
+        print("=========================================================")
+        print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
+        print("=========================================================")
         # Save model after each episode if save_path provided
         if save_path is not None:
             model.save(save_path)
-    logging.info(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
-    logging.info("=========================================================")
+    print(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
+    print("=========================================================")
     leaker_percentage = (leaker_count / (env.num_threats * num_episodes)) * 100
+    if test: 
+        return response, leaker_count
     return model, rewards_over_time, leaker_percentage
 
 
@@ -257,7 +261,7 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
 # threat_count = count_threats("python/dataFiles/threat_location.csv")
 
 # Train DQN agent and save it to "trained_model.zip" for future use
-def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, num_threats=None):
+def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, num_threats=None, threatFilePath=None):
     leaker_percentage = 0
     if train:
         if num_threats is None:
@@ -265,8 +269,9 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
         threat_data = make_training_data(num_threats)
         train_dqn_agent(test_weapons, threat_data, num_episodes=100, save_path=savePath, load_path=loadPath)
     else:
-        threat_data = use_testing_data(threatFileLocation)
-        model, rewards, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True)
+        threat_data = use_testing_data(threatFilePath)
+        response, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True, test=True, threat_file_path=threatFilePath)
+        return response, leaker_percentage
     return savePath, leaker_percentage
 
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),

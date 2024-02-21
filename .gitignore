@@ -7,6 +7,7 @@
 
 **/dataFiles/trained_model.zip
 **/dataFiles/Weapons_and_Test_Threats.xlsx
+**/dataFiles/simulationDroneLocations.csv
 
 # python/*/Tests
 

@@ -160,7 +160,7 @@ def destroyDrone(droneID: int) -> list:
     if (commandResponse:=runSyncCommand(command=delRobotModel)) is not None: 
         status_message = commandResponse.split("status_message")[1] # Isolates just the status message portion
         status_message = status_message[2:len(status_message)-2].replace("[","").replace("]","").replace("_"," ") # more formatting to make it prettier
-        ic(status_message)
+        return(status_message)
     pass
 
     

@@ -15,7 +15,7 @@ fast_missile_info = ['fast missile', 0.25, 0.35, 0.15, 0.90]
  #populates function inputs and input position
 function_inputs = []
 inputs_position = []
-with open('dataFiles/threat_location.csv', 'r') as threats:
+with open('dataFiles/simulationDroneLocations.csv', 'r') as threats:
     inputs = threats.readlines()
     for line in inputs:
         as_list = line.split(',')
@@ -25,7 +25,7 @@ with open('dataFiles/threat_location.csv', 'r') as threats:
 initial_temp = 40
 final_temp = .1
 alpha = 0.01
-current_temp = 40
+current_temp = len(function_inputs)-1
 
 def simulated_annealing(initial_state):
     """Peforms simulated annealing to find a solution"""
@@ -49,9 +49,10 @@ def simulated_annealing(initial_state):
                 solution = neighbor
         # decrement the temperature
         current_temp -= alpha
-    print_results(function_inputs, solution)
-    print(leak_percent(solution))
-    return solution, leak_percent(solution)
+    output = print_results(function_inputs, solution)
+    # print(solution)
+    # print(leak_percent(solution))
+    return output, leak_percent(solution)
 
 def leak_percent(state):
     success_count = 0
@@ -182,26 +183,27 @@ def get_random(how_many, lower_bound, upper_bound):
 
 def print_results(function_input, solution):
 
+    res = []
     for i in range(len(function_inputs)):
         if solution[i] == 1:
-            print(f"[THREAT: {function_inputs[i]}, Weapon Chosen: 'Long Range Missile']")
+            res.append([function_inputs[i], ['Long Range Missile']])
             continue
         if solution[i] == 2:
-            print(f"[THREAT: {function_inputs[i]}, Weapon Chosen: 'Medium Range Missile']")
+            res.append([function_inputs[i], ['Medium Range Missile']])
             continue
         if solution[i] == 3:
-            print(f"[THREAT: {function_inputs[i]}, Weapon Chosen: 'Short Range Missile']")
+            res.append([function_inputs[i], ['Short Range Missile']])
             continue
         if solution[i] == 4:
-            print(f"[THREAT: {function_inputs[i]}, Weapon Chosen: 'Directed Energy']")
+            res.append([function_inputs[i], ['Directed Energy']])
             continue
 
-    print()
+    return res
 
 def runSimulatedAnnealing():
     leaker_percentage = 0
     initial_solution = []
     for i in range(50):
         initial_solution.append(random.randint(1, 4))
-    solution, leaker_percentage = simulated_annealing(initial_solution)
-    return leaker_percentage
+    response, leaker_percentage = simulated_annealing(initial_solution)
+    return response, leaker_percentage
