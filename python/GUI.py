@@ -46,6 +46,8 @@ def submit():
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
     
+    simulation_leaker_percent = 0.0
+    algorithm_leaker_percentage = 0.0
     #simulation_leaker_percent, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
 
     columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
@@ -62,7 +64,7 @@ def submit():
         response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False)
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
         dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
-        #printOutputList(response)
+        print(response)
         
 
     elif algorithm == "Genetic Algorithm":
@@ -75,14 +77,14 @@ def submit():
         response,leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
-        printOutputList(response)
+        print(response)
 
     elif algorithm == "Simulated Annealing":
         response,leaker_percentage = runSimulatedAnnealing()
         leaker_percentage = leaker_percentage * 100
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
-        printOutputList(response)
+        print(response)
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -110,13 +112,6 @@ def submit():
 
     rwin.mainloop()
 
-def printOutputList(outputList: list):
-    text = tk.Text(master=root, height=100, width=50, bg="gray")
-    text.pack(side = "left")
-    text.place(x=20,y=230)
-    for entry in outputList:
-        print(entry)
-        text.insert(tk.END, str(entry) + '\n')
 
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
