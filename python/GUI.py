@@ -10,7 +10,12 @@ import pandas as pd
 import random 
 import time
 import csv
-#from app import run_BOWSER_simulation
+try:
+    from app import run_BOWSER_simulation
+    RUN_SIMULATION = False
+except:
+    RUN_SIMULATION = False
+
 
 masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
@@ -46,10 +51,12 @@ def submit():
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
     
-    simulation_leaker_percent = 10.0
-    algorithm_leaker_percentage = 20.0
-    #simulation_leaker_percent, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
-
+    if RUN_SIMULATION:
+        simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
+    else:
+        simulation_leaker_percentage = 10.0
+        algorithm_leaker_percentage = 20.0
+    
     columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
     df = pd.read_csv(masterTemplate, header=None, names=columns)
     limited_df = df.sample(num_threats)
@@ -68,7 +75,7 @@ def submit():
         
 
     elif algorithm == "Genetic Algorithm":
-        leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+        response, leaker_percentage = runGA(threatFileLocation=threatFileLocation)
         leaker_percentage = (1.00 - leaker_percentage) * 100
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
@@ -90,7 +97,9 @@ def submit():
     rwin.title('Your Result')
     rwin.geometry('700x500')
 
-    num_leakers = int(num_threats * leaker_percentage * 0.01)
+    algorithm_num_leakers = int(num_threats * algorithm_leaker_percentage * 0.01)
+    simulation_num_leakers = int(num_threats * simulation_leaker_percentage * 0.01)
+    
 
     rTitle = ctk.CTkLabel(rwin,text=algorithm,font=("Rockwell Extra Bold",50))
     rTitle.pack(pady=40)
@@ -102,12 +111,12 @@ def submit():
 
     rleakersLabel = ctk.CTkLabel(rwin,text="Leakers",font=("Helvetica",20))
     rleakersLabel.pack(pady=5)
-    rleakersLabel = ctk.CTkLabel(rwin,text=num_leakers,font=("Helvetica",15), bg_color= "red")
+    rleakersLabel = ctk.CTkLabel(rwin,text=algorithm_num_leakers,font=("Helvetica",15), bg_color= "red")
     rleakersLabel.pack(pady=20)
 
     rActualLeakageLabel = ctk.CTkLabel(rwin,text="Actual Leakage",font=("Helvetica",20))
     rActualLeakageLabel.pack(side="left", padx=5)
-    rActualLeakage = ctk.CTkLabel(rwin,text=f"{simulation_leaker_percent}%",font=("Helvetica",15), bg_color= "red")
+    rActualLeakage = ctk.CTkLabel(rwin,text=f"{simulation_leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
     rActualLeakage.pack(side="left", padx=20)
 
     rPredictedLeakageLabel = ctk.CTkLabel(rwin,text="Predicted Leakage",font=("Helvetica",20))
@@ -157,19 +166,19 @@ submitButton.pack(pady=5)
 outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
 outputLabel.pack(side="bottom", pady=10)
 
-dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: not run yet", wraplength=200)
+dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: No Tracked Runs in Current Session", wraplength=200)
 dleaker.pack(side="right")
 dleaker.place(x=800,y=150)
 
-gleaker = ctk.CTkLabel(root, text="Genetic Algorithm: not run yet", wraplength=200)
+gleaker = ctk.CTkLabel(root, text="Genetic Algorithm: No Tracked Runs in Current Session", wraplength=200)
 gleaker.pack(side="right")
 gleaker.place(x=800,y=190)
 
-mleaker = ctk.CTkLabel(root, text="Munkres Algorithm: not run yet", wraplength=200)
+mleaker = ctk.CTkLabel(root, text="Munkres Algorithm: No Tracked Runs in Current Session", wraplength=200)
 mleaker.pack(side="right")
 mleaker.place(x=800,y=230)
 
-sleaker = ctk.CTkLabel(root, text="Simulated Annealing: not run yet", wraplength=200)
+sleaker = ctk.CTkLabel(root, text="Simulated Annealing: No Tracked Runs in Current Session", wraplength=200)
 sleaker.pack(side="right")
 sleaker.place(x=800,y=270)
 

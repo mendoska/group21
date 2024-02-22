@@ -164,3 +164,7 @@ def runMunkres(threatFileLocation, weaponFileLocation):
     output, leaker_percentage = munkres(threatFileLocation, weaponFileLocation, pk_dict)
     return output, leaker_percentage
     
+    
+
+if __name__ is "__main__":
+    runMunkres(threatFileLocation="dataFiles/simulationDroneLocations.csv", weaponFileLocation="dataFiles/weapons_data.csv")

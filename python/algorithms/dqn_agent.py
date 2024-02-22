@@ -278,3 +278,9 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
 
 # runDQN(savePath="python/dataFiles/trained_model.zip", train=True)
+
+
+
+
+if __name__ is "__main__":
+    runDQN()

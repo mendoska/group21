@@ -102,24 +102,7 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     startingX = radius * cos(angle)
     startingY = radius * sin(angle)
     startingZ = 0
-    
-    
-    # startingX = uniform(a=spawnRange[0],b=spawnRange[1])
-    # startingY = uniform(a=spawnRange[0],b=spawnRange[1])
-    # quadrant = (randint(1,4))
-    # if quadrant == 1:
-    #     startingX *= 1 
-    #     startingY *= 1 
-    # elif quadrant == 2:
-    #     startingX *= -1 
-    #     startingY *= 1 
-    # elif quadrant == 3:
-    #     startingX *= -1 
-    #     startingY *= -1 
-    # elif quadrant == 4:
-    #     startingX *= 1 
-    #     startingY *= -1 
-        
+
     
     print(f"Spawning Drone at ({startingX},{startingY},{startingZ})")
     # calls the function which creates and returns a subprocess object which executes the "add_robots_to_simulation" command
@@ -136,7 +119,7 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     droneDirectory[droneID] = tempDrone
     subprocesses[f"robot_{droneID}"] = droneSubprocess
     
-    # wait for signal that drone has reached the origin, then begin the process of deleting robot
+    # wait for signal that drone has reached the origin, then begin the process of deleting robot (Checks twice because false flags have appeared)
     waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
     waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
     droneDirectory[droneID].currentStatus="Leaker"
@@ -221,22 +204,26 @@ def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:
     
     """Write Drone Locations into CSV for Algorithms"""
     
-    writeDictToCSV(locationDirectory,"threatFileLocation.csv")
+    writeDictToCSV(locationDirectory,threatFileLocation)
     
     "" "Call Algorithm """    
     start = time()
     if algorithmChoice == "DQN":
+        from algorithms.dqn_agent import runDQN
         runDQN(savePath=dqnModelPath, train=True, num_threats=numberOfDrones)
         sleep(3)
         response, algorithm_leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
     elif algorithmChoice == "Genetic Algorithm":
-        algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+        from algorithms.geneticAlgorithmTest import runGA
+        response, algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
         algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
 
     elif algorithmChoice == "Munkres":
+        from algorithms.munkres_algorithm import runMunkres
         response, algorithm_leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
 
     elif algorithmChoice == "Simulated Annealing":
+        from algorithms.simulated_annealing import runSimulatedAnnealing
         response, algorithm_leaker_percentage = runSimulatedAnnealing()
         leaker_percealgorithm_leaker_percentagenalgorithm_leaker_percentagetage *= 100
     else:
@@ -267,9 +254,7 @@ def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:
     
     try:
         for subprocessID in subprocesses:
-            ic(subprocesses)
-            subprocesses[subprocessID].terminate()
-            sleep(1)
+            # ic(subprocesses)
             subprocesses[subprocessID].kill()
     except: 
         pass

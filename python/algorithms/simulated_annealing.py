@@ -208,3 +208,9 @@ def runSimulatedAnnealing():
         initial_solution.append(random.randint(1, 4))
     response, leaker_percentage = simulated_annealing(initial_solution)
     return response, leaker_percentage
+
+
+
+
+if __name__ is "__main__":
+    runSimulatedAnnealing()

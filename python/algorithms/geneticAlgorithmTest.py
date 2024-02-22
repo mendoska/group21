@@ -153,24 +153,27 @@ def runGA(threatFileLocation):
         print("Current best solution:\n", ga_instance.best_solution()[0])
         print("Fitness of the best solution :", ga_instance.best_solution()[1], "\n")
         if ga_instance.generations_completed == num_generations :
-            print('{', end='')
+            tempList = []
+            
             for solution in range(len(ga_instance.best_solution()[0])):
                 if solution % 1 == 0 and solution != 0:
-                    print()
+                    # print()
+                    pass
                 if ga_instance.best_solution()[0][solution] == 1:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Long Range Missile']", end=' ')
+                    tempList.append([function_inputs[solution], 'Long Range Missile'])
                     continue
                 if ga_instance.best_solution()[0][solution] == 2:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Medium Range Missile']", end=' ')
+                    tempList.append([function_inputs[solution], 'Medium Range Missile'])
                     continue
                 if ga_instance.best_solution()[0][solution] == 3:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Short Range Missile']", end=' ')
+                    tempList.append([function_inputs[solution], 'Short Range Missile'])
                     continue
                 if ga_instance.best_solution()[0][solution] == 4:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Directed Energy']", end=' ')
+                    tempList.append([function_inputs[solution], 'Directed Energy'])
                     continue
-            print('}')
-            print()
+            global response
+            response = tempList    
+
 
 
 
@@ -210,8 +213,11 @@ def runGA(threatFileLocation):
                            on_generation=on_gen,
                            stop_criteria=f"saturate_{num_generations}")
     ga_instance.run()
-    return ga_instance.best_solution()[1]
+    print(ga_instance.best_solution())
+    return response, ga_instance.best_solution()[1]
 # ga_instance.plot_fitness()
 
 
 
+if __name__ is "__main__":
+    runGA("dataFiles/simulationDroneLocations.csv")
