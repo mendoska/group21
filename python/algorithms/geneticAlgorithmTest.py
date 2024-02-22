@@ -153,22 +153,25 @@ def runGA(threatFileLocation):
         print("Generation : ", ga_instance.generations_completed)
         print("Current best solution:\n", ga_instance.best_solution()[0])
         print("Fitness of the best solution :", ga_instance.best_solution()[1], "\n")
+        # Calculate Leaker Percentage
+        leakers_percentage = 100 * (1 - ga_instance.best_solution()[1])
+        
         if ga_instance.generations_completed == num_generations :
             print('{', end='')
             for solution in range(len(ga_instance.best_solution()[0])):
                 if solution % 1 == 0 and solution != 0:
                     print()
                 if ga_instance.best_solution()[0][solution] == 1:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Long Range Missile']", end=' ')
+                    print(f"[THREAT: {function_inputs[solution]}, Leaker Percentage: {leakers_percentage:.2f}%]", end=' ')
                     continue
                 if ga_instance.best_solution()[0][solution] == 2:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Medium Range Missile']", end=' ')
+                    print(f"[THREAT: {function_inputs[solution]}, Leaker Percentage: {leakers_percentage:.2f}%]", end=' ')
                     continue
                 if ga_instance.best_solution()[0][solution] == 3:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Short Range Missile']", end=' ')
+                    print(f"[THREAT: {function_inputs[solution]}, Leaker Percentage: {leakers_percentage:.2f}%]", end=' ')
                     continue
                 if ga_instance.best_solution()[0][solution] == 4:
-                    print(f"[THREAT: {function_inputs[solution]}, Weapon Chosen: 'Directed Energy']", end=' ')
+                    print(f"[THREAT: {function_inputs[solution]}, Leaker Percentage: {leakers_percentage:.2f}%]", end=' ')
                     continue
             print('}')
             print()
