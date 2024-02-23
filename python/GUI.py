@@ -21,6 +21,7 @@ masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
 weaponFileLocation = "dataFiles/weapon_data.csv"
 dqnModelPath = "dataFiles/trained_model.zip"
+historyFile = "dataFiles/history.csv"
 
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
@@ -28,6 +29,14 @@ ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 root = ctk.CTk()
 root.title('B.O.W.S.E.R.')
 root.geometry('1000x600')
+
+def write_history(history_file,list):
+    fieldnames = ['algorithm_name', 'leaker_percentage']
+    new_list = {'algorithm_name':list[0], 'leaker_percentage':list[1]}
+    with open(history_file,'a',newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writerow(new_list)
+        file.close()
 
 # Read the number of inputs 
 def count_threats(threat_file):
@@ -92,6 +101,9 @@ def submit():
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
         print(response)
+    
+    save_list = [algorithm,leaker_percentage]
+    write_history(historyFile,save_list)
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
