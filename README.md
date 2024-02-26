@@ -1,23 +1,24 @@
 # Battlefield Optimization for Weapon System Engagement Resiliency (BOWSER) - Group 21
+<div style = "text-align:center;">
 
 <img src="https://github.com/mendoska/group21/blob/main/BOWSER_LOGO_FINAL.png" width="300">
 
 <u> **Team Members** </u>
 
-- Solan Degefa
+Solan Degefa
 
-- Daniel Dix 
+Daniel Dix 
 
-- Liliana Ramos 
+Liliana Ramos 
 
-- Haoran Xiao 
+Haoran Xiao 
 
-- Alexander Mendoza 
-
+Alexander Mendoza 
 
 <u> Advisor </u>
 
 Xiangnan Zhong  
+</div>
 
 ## Project Summary
 
