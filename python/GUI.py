@@ -38,6 +38,12 @@ def write_history(history_file,list):
         writer.writerow(new_list)
         file.close()
 
+# sort by leaker percentage
+def read_history(history_file):
+    sortedList = pd.read_csv(history_file)
+    sortedList.sort_values(sortedList.columns[1],axis=0,inplace=True)
+    return sortedList
+
 # Read the number of inputs 
 def count_threats(threat_file):
     with open(threat_file, 'r') as file:
@@ -104,6 +110,9 @@ def submit():
     
     save_list = [algorithm,leaker_percentage]
     write_history(historyFile,save_list)
+    savedList = read_history(historyFile)
+
+    leaderBoard.configure(text=savedList)
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -143,9 +152,10 @@ def submit():
 
     rwin.mainloop()
 
-
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
+
+savedList = read_history(historyFile)
 
 logo = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(150,150))
 logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
@@ -193,5 +203,9 @@ mleaker.place(x=800,y=230)
 sleaker = ctk.CTkLabel(root, text="Simulated Annealing: No Tracked Runs in Current Session", wraplength=200)
 sleaker.pack(side="right")
 sleaker.place(x=800,y=270)
+
+leaderBoard = ctk.CTkLabel(root, text=savedList, anchor="e", justify=RIGHT, wraplength=400)
+leaderBoard.pack(side="left")
+leaderBoard.place(x=50,y=210)
 
 root.mainloop()
