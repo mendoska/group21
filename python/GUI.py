@@ -63,6 +63,12 @@ def submit():
     except ValueError:
         print("Invalid Range Provided")
         return
+    unit = unitDropdown.get()
+    if unit =="km":
+        rangemin *= 1000
+        rangemax *= 1000
+    else:
+        pass
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
     
@@ -155,20 +161,40 @@ def submit():
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
 
+def minSlider(value):
+    minLabel.configure(text=f"Min: {int(value)}")
+
+def maxSlider(value):
+    maxLabel.configure(text=f"Max: {int(value)}")
+
 savedList = read_history(historyFile)
 
 logo = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(150,150))
 logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
+
+yrh = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(40,40))
+yrhImg = ctk.CTkLabel(root, text="", image = yrh).place(x=350,y=180)
+yrhLabel = ctk.CTkLabel(root,text="You are here",font=("Helvetica",10),height=10).place(x=343,y=220)
 
 title = ctk.CTkLabel(root,text="B.O.W.S.E.R.",font=("Rockwell Extra Bold",50))
 title.pack(pady=40)
 
 rLabel = ctk.CTkLabel(root, text="Range")
 rLabel.pack(pady=5)
-rminEntry = ctk.CTkEntry(root, placeholder_text="Min")
-rminEntry.pack(pady=10)
-rmaxEntry = ctk.CTkEntry(root, placeholder_text="Max")
+minVar = tk.IntVar(value=1)
+rminEntry = ctk.CTkSlider(root, from_=10, to=50, variable=minVar,command=minSlider,progress_color="red")
+rminEntry.pack(pady=2)
+minLabel = ctk.CTkLabel(root, text=f"Min: {rminEntry.get()}")
+minLabel.place(x=600,y=170)
+maxVar = tk.IntVar(value=1)
+rmaxEntry = ctk.CTkSlider(root, from_=10, to=50, variable=maxVar,command=maxSlider,fg_color="red")
 rmaxEntry.pack(pady=10)
+maxLabel = ctk.CTkLabel(root, text=f"Max: {rmaxEntry.get()}")
+maxLabel.place(x=600,y=200)
+unitOptions = ["m", "km"]
+unitDropdown = ctk.CTkOptionMenu(root, values=unitOptions,width=60)
+unitDropdown.pack(pady=10)
+unitDropdown.place(x=650,y=185)
 
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
 algoLabel.pack(pady=5)
