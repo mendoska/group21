@@ -3,7 +3,7 @@ from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
 from tkinter import *
-from PIL import Image
+from PIL import Image, ImageTk
 import customtkinter as ctk
 import tkinter as tk
 import pandas as pd
@@ -67,6 +67,12 @@ def submit():
     if unit =="km":
         rangemin *= 1000
         rangemax *= 1000
+    elif unit == "ft":
+        rangemin *= 0.3048
+        rangemax *= 0.3048
+    elif unit == "mi":
+        rangemin *= 1852
+        rangemax *= 1852
     else:
         pass
     algorithm = algoDropdown.get()
@@ -117,8 +123,8 @@ def submit():
     save_list = [algorithm,leaker_percentage]
     write_history(historyFile,save_list)
     savedList = read_history(historyFile)
-
-    leaderBoard.configure(text=savedList)
+    
+    leaderBoard.configure(text=savedList[0:5])
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -161,40 +167,91 @@ def submit():
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
 
-def minSlider(value):
-    minLabel.configure(text=f"Min: {int(value)}")
+#def minSlider(value):
+#    minLabel.configure(text=f"Min: {int(value)}")
 
-def maxSlider(value):
-    maxLabel.configure(text=f"Max: {int(value)}")
+#def maxSlider(value):
+#    maxLabel.configure(text=f"Max: {int(value)}")
+
+def angleSlider(value):
+    angleLabel.configure(text=f"Angle: {int(value)} degree")
 
 savedList = read_history(historyFile)
 
 logo = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(150,150))
 logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
 
-yrh = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(40,40))
-yrhImg = ctk.CTkLabel(root, text="", image = yrh).place(x=350,y=180)
-yrhLabel = ctk.CTkLabel(root,text="You are here",font=("Helvetica",10),height=10).place(x=343,y=220)
+#yrh = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(40,40))
+#yrhImg = ctk.CTkLabel(root, text="", image = yrh).place(x=350,y=180)
+#yrhLabel = ctk.CTkLabel(root,text="You are here",font=("Helvetica",10),height=10).place(x=343,y=220)
 
 title = ctk.CTkLabel(root,text="B.O.W.S.E.R.",font=("Rockwell Extra Bold",50))
 title.pack(pady=40)
 
+def showRange():
+    canvas = tk.Canvas(root, width=300, height=300, borderwidth=0, highlightthickness=0,
+                    bg="black")
+    canvas.pack(pady=20)
+    canvas.place(x=900,y=400)
+
+    rangemin = int(rminEntry.get())
+    rangemax = int(rmaxEntry.get())
+    angle = int(angleEntry.get())
+    unit = unitDropdown.get()
+
+    startAngle = 90 - (angle/2)
+    endAngle = 90 + (angle/2)
+
+    def _create_circle(self, x, y, r, **kwargs):
+        return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+    tk.Canvas.create_circle = _create_circle
+
+    def _create_circle_arc(self, x, y, r, **kwargs):
+        if "start" in kwargs and "end" in kwargs:
+            kwargs["extent"] = kwargs.pop("end") - kwargs["start"]
+        return self.create_arc(x-r, y-r, x+r, y+r, **kwargs)
+    tk.Canvas.create_circle_arc = _create_circle_arc
+
+    canvas.create_circle_arc(150, 150, rangemax, fill="green", outline="", start=startAngle, end=endAngle)
+    canvas.create_circle_arc(150, 150, rangemin, fill="red", outline="", start=startAngle, end=endAngle)
+    canvas.create_circle(150, 150, 10, fill="#BBB", outline="")
+
+    unitLabel.configure(text=f"|______| 50 {unit}")
+    #unitLabel.pack(pady=2)
+
 rLabel = ctk.CTkLabel(root, text="Range")
 rLabel.pack(pady=5)
-minVar = tk.IntVar(value=1)
-rminEntry = ctk.CTkSlider(root, from_=10, to=50, variable=minVar,command=minSlider,progress_color="red")
-rminEntry.pack(pady=2)
-minLabel = ctk.CTkLabel(root, text=f"Min: {rminEntry.get()}")
-minLabel.place(x=600,y=170)
-maxVar = tk.IntVar(value=1)
-rmaxEntry = ctk.CTkSlider(root, from_=10, to=50, variable=maxVar,command=maxSlider,fg_color="red")
+rminEntry = ctk.CTkEntry(root, placeholder_text="Min")
+rminEntry.pack(pady=10)
+rmaxEntry = ctk.CTkEntry(root, placeholder_text="Max")
 rmaxEntry.pack(pady=10)
-maxLabel = ctk.CTkLabel(root, text=f"Max: {rmaxEntry.get()}")
-maxLabel.place(x=600,y=200)
-unitOptions = ["m", "km"]
+
+angleEntry = ctk.CTkSlider(root, from_=1, to=359, command=angleSlider)
+angleEntry.pack(pady=2)
+angleEntry.set(1)
+angleLabel = ctk.CTkLabel(root, text=f"Angle: {angleEntry.get()} degree")
+angleLabel.pack(pady=2)
+rangeButton = ctk.CTkButton(root, text="View Range", command=showRange)
+rangeButton.pack(pady=5)
+unitLabel = ctk.CTkLabel(root, text="")
+unitLabel.pack(pady=5)
+unitLabel.place(x=720, y=560)
+
+#minVar = tk.IntVar(value=1)
+#rminEntry = ctk.CTkSlider(root, from_=10, to=50, variable=minVar,command=minSlider,progress_color="red")
+#rminEntry.pack(pady=2)
+#minLabel = ctk.CTkLabel(root, text=f"Min: {rminEntry.get()}")
+#minLabel.place(x=600,y=170)
+#maxVar = tk.IntVar(value=1)
+#rmaxEntry = ctk.CTkSlider(root, from_=10, to=50, variable=maxVar,command=maxSlider,fg_color="red")
+#rmaxEntry.pack(pady=10)
+#maxLabel = ctk.CTkLabel(root, text=f"Max: {rmaxEntry.get()}")
+#maxLabel.place(x=600,y=200)
+
+unitOptions = ["m", "km", "ft", "mi"]
 unitDropdown = ctk.CTkOptionMenu(root, values=unitOptions,width=60)
 unitDropdown.pack(pady=10)
-unitDropdown.place(x=650,y=185)
+unitDropdown.place(x=600,y=210)
 
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
 algoLabel.pack(pady=5)
@@ -230,7 +287,7 @@ sleaker = ctk.CTkLabel(root, text="Simulated Annealing: No Tracked Runs in Curre
 sleaker.pack(side="right")
 sleaker.place(x=800,y=270)
 
-leaderBoard = ctk.CTkLabel(root, text=savedList, anchor="e", justify=RIGHT, wraplength=400)
+leaderBoard = ctk.CTkLabel(root, text=savedList[0:5], anchor="e", justify=RIGHT, wraplength=400)
 leaderBoard.pack(side="left")
 leaderBoard.place(x=50,y=210)
 
