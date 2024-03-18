@@ -1,4 +1,5 @@
 from algorithms.dqn_agent import runDQN
+# from algorithms.dqn_agent1 import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
@@ -32,7 +33,7 @@ root.geometry('1000x600')
 
 def write_history(history_file,list):
     fieldnames = ['algorithm_name', 'leaker_percentage']
-    new_list = {'algorithm_name':list[0], 'leaker_percentage':list[1]}
+    new_list = {'algorithm_name': list[0], 'leaker_percentage': list[1]}
     with open(history_file,'a',newline='') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writerow(new_list)
@@ -42,7 +43,7 @@ def write_history(history_file,list):
 def read_history(history_file):
     sortedList = pd.read_csv(history_file)
     sortedList.sort_values(sortedList.columns[1],axis=0,inplace=True)
-    return sortedList
+    return sortedList.to_string(index=False)
 
 # Read the number of inputs 
 def count_threats(threat_file):
@@ -95,7 +96,7 @@ def submit():
         current_num_threats = count_threats(threatFileLocation)
         runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
         time.sleep(3)
-        response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False)
+        response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
         dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
         print(response)
