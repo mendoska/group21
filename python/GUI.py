@@ -125,7 +125,7 @@ def submit():
     write_history(historyFile,save_list)
     savedList = read_history(historyFile)
     
-    leaderBoard.configure(text=savedList[0:5])
+    leaderBoard.configure(text="\n".join(savedList.split('\n')[:10]))
 
     rwin = ctk.CTk()
     rwin.title('Your Result')
@@ -288,7 +288,7 @@ sleaker = ctk.CTkLabel(root, text="Simulated Annealing: No Tracked Runs in Curre
 sleaker.pack(side="right")
 sleaker.place(x=800,y=270)
 
-leaderBoard = ctk.CTkLabel(root, text=savedList[0:5], anchor="e", justify=RIGHT, wraplength=400)
+leaderBoard = ctk.CTkLabel(root, text="\n".join(savedList.split('\n')[:10]), anchor="e", justify=RIGHT, wraplength=400)
 leaderBoard.pack(side="left")
 leaderBoard.place(x=50,y=210)
 

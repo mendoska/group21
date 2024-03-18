@@ -95,10 +95,8 @@ class BattleEnv(Env):
         random.shuffle(self.weapons)
         # Shuffle order of threats
         random.shuffle(self.threats)
-        self.state = np.full(self.num_threats, -1, dtype=int)
-        # for i in range(self.num_threats):
-        #     # Assign at least one weapon to each threat
-        #     self.state[i] = random.choice(range(self.num_weapons))
+        # Initially assign a random weapon to each threat
+        self.state = np.array([random.randint(0, self.num_weapons - 1) for _ in range(self.num_threats)], dtype=int)
         self.current_threat = 0
         return self.get_observation()
 
