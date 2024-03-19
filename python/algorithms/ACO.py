@@ -6,12 +6,12 @@ import random
 import matplotlib.pyplot as plt
 
 
-num_ants = 8
+num_ants = 6
 iterations = 100
 #Rate at which pheromone evaporates
 pheromone_evaporation_rate = 0.1
 #Rate at which pheromone is deposited
-pheromone_deposition_rate = 0.5
+pheromone_deposition_rate = 0.7
 #Initial pheromone level
 pheromone_initial = 0.1
 
@@ -44,10 +44,7 @@ pheromone_trails = np.full((len(function_inputs), len(DefensiveAssets)), pheromo
 # Define fitness evaluation function
 def evaluate_fitness(solution):
     success_count = 0
-    weapons_quantity = [8, 20, 25, 10]
-    last_fire_times = [0] * len(weapons_quantity)
-    cooldown_time = 5
-    
+    weapons_quantity = [8, 20, 25, 10]  
     for threat in range(len(function_inputs)):
         if solution[threat] == 0:
             solution[threat] = 1
@@ -59,11 +56,6 @@ def evaluate_fitness(solution):
             check = float(inputs_position[threat][3])
             if curr_distance < float(inputs_position[threat][3]):
                 continue
-            current_time = time.time()
-            if current_time < last_fire_times[solution[threat]-1] + cooldown_time:
-                continue
-            else:
-                last_fire_times[solution[threat]-1] = current_time
 # Weapon quantity constraint implementation
             if weapons_quantity[solution[threat]-1] <= 0:
                 continue
