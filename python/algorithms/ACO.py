@@ -178,16 +178,16 @@ for iteration in range(iterations):
             best_fitness = fitness
     pheromone_trails = update_pheromones(pheromone_trails, ant_solutions, best_solution)
     fitnesses.append(best_fitness)
-    
-    print(f"Iteration {iteration + 1}\nBest solution: {best_solution}),\nBest fitness: {best_fitness}")
-
-# Plotting the best fitness of each iteration
-plt.plot(range(iterations), fitnesses)
-plt.title('Ant Colony Optimization')
-plt.xlabel('Iteration')
-plt.ylabel('Best Fitness')
-plt.grid(True)
-plt.show()
-
+#print(f"Iteration {iterations}\nBest solution: {best_solution},\nBest fitness: {best_fitness}")
+print("Iteration:", iterations)
 print("Final best solution found:", best_solution)
 print("Final best fitness:", best_fitness)
+
+# Plotting the best fitness of each iteration
+# plt.plot(range(iterations), fitnesses)
+# plt.title('Ant Colony Optimization')
+# plt.xlabel('Iteration')
+# plt.ylabel('Best Fitness')
+# plt.grid(True)
+# plt.show()
+
