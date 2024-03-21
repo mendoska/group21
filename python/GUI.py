@@ -29,7 +29,7 @@ ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 root = ctk.CTk()
 root.title('B.O.W.S.E.R.')
-root.geometry('1000x600')
+root.geometry('1250x750')
 
 def write_history(history_file,list):
     fieldnames = ['algorithm_name', 'leaker_percentage']
@@ -89,6 +89,12 @@ def submit():
     df = pd.read_csv(masterTemplate, header=None, names=columns)
     limited_df = df.sample(num_threats)
     limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
+    if 'xMin' in globals() and 'xMax' in globals():
+        limited_df['x'] = [random.uniform(xMin, xMax) for _ in range(num_threats)]
+    if 'yMin' in globals() and 'yMax' in globals():
+        limited_df['y'] = [random.uniform(yMin, yMax) for _ in range(num_threats)]
+    if 'zMin' in globals() and 'zMax' in globals():
+        limited_df['z'] = [random.uniform(zMin, zMax) for _ in range(num_threats)]
     limited_df.to_csv(threatFileLocation, index=False, header=False)
 
     time.sleep(3)
@@ -188,6 +194,7 @@ logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
 
 title = ctk.CTkLabel(root,text="B.O.W.S.E.R.",font=("Rockwell Extra Bold",50))
 title.pack(pady=40)
+title.place(x=225,y=25)
 
 canvas = tk.Canvas(root, width=500, height=500, borderwidth=0, highlightthickness=0,bg="black")
 canvas.pack(pady=20)
@@ -219,14 +226,14 @@ def showRange():
         rangemax /= 9
         rangemin /= 9
         rSize /= 9
-        unitLabel.configure(text=f"|______| 450 {unit}")
+        unitLabel.configure(text=f"|________| 450 {unit}")
     elif rangemax > 300:
         rangemax /= 3
         rangemin /= 3
         rSize /= 3
-        unitLabel.configure(text=f"|______| 150 {unit}")
+        unitLabel.configure(text=f"|________| 150 {unit}")
     else:
-        unitLabel.configure(text=f"|______| 50 {unit}")
+        unitLabel.configure(text=f"|________| 50 {unit}")
 
     def _create_circle(self, x, y, r, **kwargs):
         return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
@@ -241,6 +248,67 @@ def showRange():
     canvas.create_circle_arc(250, 250, rangemax, fill="green", outline="", start=startAngle, end=endAngle)
     canvas.create_circle_arc(250, 250, rangemin, fill="red", outline="", start=startAngle, end=endAngle)
     canvas.create_circle(250, 250, rSize, fill="#BBB", outline="")
+
+def openNewWindow():
+    mwin = ctk.CTk()
+    mwin.title('More Features')
+    mwin.geometry('800x600')
+    ctk.CTkLabel(mwin, text="Spawn Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
+
+    x_min, x_max = tk.DoubleVar(), tk.DoubleVar()
+    y_min, y_max = tk.DoubleVar(), tk.DoubleVar()
+    z_min, z_max = tk.DoubleVar(), tk.DoubleVar()
+
+    def updateXmin(value):
+        xMinLabel.configure(text=f"X Min: {int(value)}")
+    def updateXmax(value):
+        xMaxLabel.configure(text=f"X Max: {int(value)}")
+    def updateYmin(value):
+        yMinLabel.configure(text=f"Y Min: {int(value)}")
+    def updateYmax(value):
+        yMaxLabel.configure(text=f"Y Max: {int(value)}")
+    def updateZmin(value):
+        zMinLabel.configure(text=f"Z Min: {int(value)}")
+    def updateZmax(value):
+        zMaxLabel.configure(text=f"Z Max: {int(value)}")
+
+    
+    xMinLabel = ctk.CTkLabel(mwin, text=f"X Min: {x_min.get()}")
+    xMinLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=x_min, command=updateXmin).pack(pady=5)
+
+    xMaxLabel = ctk.CTkLabel(mwin, text=f"X Max: {x_max.get()}")
+    xMaxLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=x_max, command=updateXmax).pack(pady=5)
+
+    yMinLabel = ctk.CTkLabel(mwin, text=f"Y Min: {y_min.get()}")
+    yMinLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=y_min, command=updateYmin).pack(pady=5)
+
+    yMaxLabel = ctk.CTkLabel(mwin, text=f"Y Max: {y_max.get()}")
+    yMaxLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=y_max, command=updateYmax).pack(pady=5)
+
+    zMinLabel = ctk.CTkLabel(mwin, text=f"Z Min: {z_min.get()}")
+    zMinLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=0, to=10000, variable=z_min, command=updateZmin).pack(pady=5)
+
+    zMaxLabel = ctk.CTkLabel(mwin, text=f"Z Max: {z_max.get()}")
+    zMaxLabel.pack(pady=5)
+    ctk.CTkSlider(mwin, from_=0, to=10000, variable=z_max, command=updateZmax).pack(pady=5)
+
+
+    def saveSettings():
+        global xMin, xMax, yMin, yMax, zMin, zMax
+        xMin, xMax = x_min.get(), x_max.get()
+        yMin, yMax = y_min.get(), y_max.get()
+        zMin, zMax = z_min.get(), z_max.get()
+        mwin.destroy()
+
+    saveButton = ctk.CTkButton(mwin, text="Save", command=saveSettings)
+    saveButton.pack(pady=10)
+
+    mwin.mainloop()
 
 rLabel = ctk.CTkLabel(root, text="Spawn Range")
 rLabel.pack(pady=5)
@@ -266,15 +334,15 @@ rangeButton.place(x=320,y=325)
 
 radarLabel = ctk.CTkLabel(root, text="Visualize Spawn Range")
 radarLabel.pack(pady=5)
-radarLabel.place(x=710,y=130)
+radarLabel.place(x=720,y=150)
 
 unitLabel = ctk.CTkLabel(root, text="")
 unitLabel.pack(pady=5)
-unitLabel.place(x=900, y=560)
+unitLabel.place(x=921, y=700)
 
-scaleLabel = ctk.CTkLabel(root, text="|______|_______|_______|_______|______")
+scaleLabel = ctk.CTkLabel(root, text="|________|________|________|________|")
 scaleLabel.pack(pady=5)
-scaleLabel.place(x=577, y=560)
+scaleLabel.place(x=721, y=700)
 
 #minVar = tk.IntVar(value=1)
 #rminEntry = ctk.CTkSlider(root, from_=10, to=50, variable=minVar,command=minSlider,progress_color="red")
@@ -308,12 +376,17 @@ currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threa
 currentThreatLabel.pack(pady=5)
 currentThreatLabel.place(x=310,y=470)
 
+moreFeaturesButton = ctk.CTkButton(root, text="More Features", command=openNewWindow)
+moreFeaturesButton.pack(pady=5)
+moreFeaturesButton.place(x=320,y=510)
+
 submitButton = ctk.CTkButton(root, text="Start", command=submit)
 submitButton.pack(pady=5)
-submitButton.place(x=320,y=510)
+submitButton.place(x=320,y=550)
 
 outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
-outputLabel.pack(side="bottom", pady=10)
+outputLabel.pack(pady=10)
+outputLabel.place(x=320,y=700)
 
 #dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: No Tracked Runs in Current Session", wraplength=200)
 #dleaker.pack(side="right")
