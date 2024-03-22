@@ -166,5 +166,5 @@ def runMunkres(threatFileLocation, weaponFileLocation):
     
     
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     runMunkres(threatFileLocation="dataFiles/simulationDroneLocations.csv", weaponFileLocation="dataFiles/weapons_data.csv")

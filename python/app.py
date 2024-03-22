@@ -1,29 +1,25 @@
-from algorithms.dqn_agent import runDQN
-from algorithms.geneticAlgorithmTest import runGA
-from algorithms.munkres_algorithm import runMunkres
-from algorithms.simulated_annealing import runSimulatedAnnealing
-
 from Models.Drone import Drone
+from Models.Weapon import Weapon
 from CLIFunctions.cliFunctions import addDroneToSimulation, issueStartCommand, startEmptyGazeboWorldSimulation, destroyDrone
 from random import randint, uniform
-from threading import Thread
+from threading import Thread, Lock, Condition
 from icecream import ic
 from time import time, sleep
 from subprocess import Popen
-from csv import DictWriter
+from csv import DictWriter, reader
 from math import cos, sin, pi
+from yaml import safe_load, dump
 
 START_FLAG = 0
-COUNTER = 0
 SYSTEM_RUNNING = False
+START_COUNTER = 0
 LEAKER_COUNT = 0
 
-# # from fakeSimulationFunctions import simulateAddingDrone, writeDictToCSV
-# def initializeDrone(droneID:int,droneDirectory:dict, locationDirectory:dict) -> None:
-#         startingLocation = spawnDroneRandomCoordinates(droneID=droneID)
-#         droneDirectory[droneID]=(Drone(droneID=droneID, startingLocation=startingLocation, currentLocation=startingLocation))
-#         locationDirectory[droneID]=(startingLocation)
+# global thread lock
+file_lock = Lock()
 
+# Define a condition variable
+file_condition = Condition(file_lock)
 
 def writeDictToCSV(dictionary, csv_filename):
     """
@@ -48,6 +44,63 @@ def writeDictToCSV(dictionary, csv_filename):
             writer.writerow({'droneID': key, 'x': values.get('x', ''), 'y': values.get('y', ''), 'z': values.get('z', ''), 
                              'minRange':values.get('minRange',''), 'Speed': 1, 'Type': 'A'})
 
+    """
+    
+    Loads Defense Weaponry from File into a list of Weapon objects, allowing for simple handling
+    Intended for multiple placements throughout the area in future
+    
+    """
+
+
+def initializeWeaponsFromFile(threat_file)-> list:
+    with open(threat_file, 'r') as file:
+        weapons = []
+        readerObj = reader(file)
+        for weaponID, threatEntry in enumerate(list(readerObj)):
+            weaponPlacement = Weapon(weaponID=weaponID,
+                                     weaponName=threatEntry[0],
+                                     location=[threatEntry[1], threatEntry[2], threatEntry[3]],
+                                     ammunitionQuantity=threatEntry[5],
+                                     firingRate=threatEntry[6]
+                                    )
+            weapons.append(weaponPlacement)
+        
+        return weapons
+
+
+def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, droneDirectory:dict) -> None:
+    global LEAKER_COUNT
+    for targetID in targetList:
+        targetThreat = droneDirectory[targetID]
+        if targetThreat.currentStatus == "Alive":
+            if weaponModel.ammunitionQuantity <= 0:
+                ic(f"{weaponModel.weaponName} has run out of ammunition, Drone {targetID} as become a leaker")
+                targetThreat.currentStatus = "Leaker"
+                LEAKER_COUNT += 1
+                
+            ic(f"{weaponModel.weaponName} has fired once at Drone {targetID}")
+            weaponModel.ammunitionQuantity -= 1
+            deletionAttempt = destroyDrone(droneID=targetID)
+            if deletionAttempt.startswith("Successfully deleted entity"):
+                targetThreat.currentStatus="Dead"
+            
+            ic(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
+
+
+# spawnParameterLock = Lock()
+
+def alterD2OSpawnParameters(s:float = 1.0, lr:float = 1.0, droneID=int ) -> None:
+    
+    filePath = '../simulation/swarm_ws/ROS2swarm_B/install/ros2swarm/share/ros2swarm/config/waffle_pi/movement_pattern/basic/drive2OriginPattern.yaml'
+    with open(file=filePath,mode='r') as file:
+        data = safe_load(file)
+    # ic(data["/**"]["ros__parameters"])
+    data["/**"]["ros__parameters"]["speed"] = s
+    data["/**"]["ros__parameters"]["leaker_range"] = lr
+    ic(droneID,s, lr,data["/**"]["ros__parameters"])
+    # Write back to YAML file
+    with open(file=filePath, mode='w') as file:
+        dump(data, file)
 
 """
 
@@ -59,7 +112,7 @@ options:
 """
 def waitForLineInSubprocess(subprocess:Popen, targetStr:str, option:int = 0):
     line = subprocess.stdout.readline()
-    while(not line.startswith(targetStr)):
+    while(not targetStr in line):
         if option == 1:
             ic(line) # prints current line to verify what process is doing
         line = subprocess.stdout.readline()
@@ -68,10 +121,10 @@ def waitForLineInSubprocess(subprocess:Popen, targetStr:str, option:int = 0):
 
 
 def delayedStartCommand(numberOfDrones:int) -> None:
-    global COUNTER, START_FLAG
+    global START_COUNTER, START_FLAG
     
     # while waiting for all the subprocesses to be created, the delayedStartCommand does nothing
-    while COUNTER != numberOfDrones:
+    while START_COUNTER != numberOfDrones:
         continue
     # # Once all of the drones have been spawned in, the function waits 10 seconds (arbitrary), and issues the start command, causing all drones to travel to the center
     sleep(10)
@@ -84,33 +137,37 @@ def delayedStartCommand(numberOfDrones:int) -> None:
 DOES WAY TOO MUCH, however this creates random spawn coordinates, then starts the subprocess which contains the robot/drone's "brain"
 waits until robot/drone has reached (0,0) +/- 0.5m and then increments the leaker count, updates the drone's class model, and removes the drone from the sim
 """
-def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRange:set, locationDict:dict) -> None:
-    global COUNTER, LEAKER_COUNT
+def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRange:set, locationDict:dict, spawnParams:set) -> None:
+    global START_COUNTER, LEAKER_COUNT
     
-    
-    """ lines 92 - 103 from ChatGPT, just didnt want to do math """
+    """ polar to cartesian conversion from ChatGPT, just didnt want to do math """
     if spawnRange[0] > spawnRange[1]:
         raise ValueError("Minimum radius cannot be greater than maximum radius")
-
+    
     # Generate random angle within 0 to 2*pi
     angle = uniform(0, 2 * pi)
-    
     # Generate random radius within the range [min_radius, max_radius]
     radius = uniform(spawnRange[0], spawnRange[1])
-    
     # Calculate x and y coordinates using polar coordinates to Cartesian coordinates conversion
     startingX = radius * cos(angle)
     startingY = radius * sin(angle)
     startingZ = 0
 
-    
-    print(f"Spawning Drone at ({startingX},{startingY},{startingZ})")
-    # calls the function which creates and returns a subprocess object which executes the "add_robots_to_simulation" command
-    droneSubprocess = addDroneToSimulation(droneID=droneID, spawnCoordinateX=startingX, spawnCoordinateY=startingY)
-    # once the subprocess is successfully created, the global counter is incremented and the drone's information is stored
-    locationDict[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange": spawnRange[0]}
-    waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[INFO] [add_bot_node-1]: process has finished cleanly [pid")
-    COUNTER += 1
+
+    with file_lock:
+        print(f"Spawning Drone at ({startingX},{startingY},{startingZ}), Speed: {spawnParams[0]}, Leaker Range: {spawnParams[1]}")
+        alterD2OSpawnParameters(s=spawnParams[0], lr=spawnParams[1], droneID=droneID)
+
+        # calls the function which creates and returns a subprocess object which executes the "add_robots_to_simulation" command
+        droneSubprocess = addDroneToSimulation(droneID=droneID, spawnCoordinateX=startingX, spawnCoordinateY=startingY)
+        # waitForLineInSubprocess(subprocess=droneSubprocess, targetStr=f"Leaker Range is: {spawnParams[1]}", option=1)
+        # once the subprocess is successfully created, the global counter is incremented and the drone's information is stored
+        locationDict[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange": spawnRange[0]}    
+        waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[INFO] [add_bot_node-1]: process has finished cleanly [pid", option=0)
+        file_condition.notify_all()
+    START_COUNTER += 1
+        
+        
     # Starting Location  = [x,y,z]
     tempDrone = Drone(droneID=droneID, 
                       currentStatus= "Alive",
@@ -120,7 +177,7 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     subprocesses[f"robot_{droneID}"] = droneSubprocess
     
     # wait for signal that drone has reached the origin, then begin the process of deleting robot (Checks twice because false flags have appeared)
-    waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
+    waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=1)
     waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
     droneDirectory[droneID].currentStatus="Leaker"
     LEAKER_COUNT += 1
@@ -135,15 +192,8 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     
     return 
     
-""" Used For Testing, Not Needed In Final Demo """
-def getUserInput(prompt:str, expectedType):
-    if type(response:=expectedType(input(prompt))) is not expectedType:
-        print("Enter an Integer")
-        getUserInput(prompt=prompt, expectedType=expectedType)
-    else:
-        return response
 
-def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:int) -> tuple:
+def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int) -> tuple:
     global SYSTEM_RUNNING
     
     threatFileLocation = "dataFiles/simulationDroneLocations.csv"
@@ -156,38 +206,22 @@ def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:
 
 
     print("                                Welcome to the BOWSER Prototype ---- DEMO ---- ")
-    
-    
-    # numberOfDrones = getUserInput(prompt="""
-    #                        Please enter a number of drones to simulate ( Max: 15 )
-    #                        """, expectedType=int)
-        
-    # algorithmChoice = getUserInput("""
-    #                         Please Input 1 - 4 to Select Algorithm:
-    #                         ---------------------------------------
-    #                         1: Deep Q Network
-    #                         2: Genetic Algorithm
-    #                         3: Munkres (Hungarian)
-    #                         4: Simulated Annealing
-    #                         """, expectedType=int)+1
-
-    
+   
     print(f"You have selected {numberOfDrones} Drones")
     ic(algorithmChoice)
-
+    
     ic("Start Empty Gazebo World")
-    """ ? Use subprocess.Popen ? """
     worldCreationProcess = startEmptyGazeboWorldSimulation(totalNumberOfDrones=2)
     waitForLineInSubprocess(subprocess=worldCreationProcess, targetStr="[INFO] [ground_truth_publisher-2]: process started with pid", option=1)
     ic("World Created")    
+    weaponList = initializeWeaponsFromFile(threat_file=threatFileLocation)
     SYSTEM_RUNNING = True
-    sleep(5)
     
     print(f"Spawn in {numberOfDrones} Drones")
     threads = []
     for x in range(numberOfDrones):
         # Create a thread for each drone
-        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, spawnRange, locationDirectory))
+        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, spawnRange, locationDirectory, (float(x+1), float(x+1) )))
         thread.start()
         threads.append(thread)
     # Once each drone thread has been created, A final "timer" thread is started which monitors the number of threads that have been executed
@@ -237,18 +271,45 @@ def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:
     
     print(f"Waiting {(end-start)} seconds to offset Sim Time to Real Time difference")
     sleep(end-start)
-    for weaponFiring in response:
-        ic(droneDirectory)
-        ic(weaponFiring)
-        droneID = int(weaponFiring[0])
-        weapon = weaponFiring[1]
-        target = droneDirectory[droneID]
-        if target.currentStatus == "Alive":
-            deletionAttempt = destroyDrone(droneID=droneID)
-            if deletionAttempt.startswith("Successfully deleted entity"):
-                target.currentStatus="Dead"
+    
+    """
+    Assigning Targets to defense weaponry, right now assuming there are 1 of each weapon system, all located at (0,0)
+    """
+    # [[short range targets],[medium Range Targets], [Long Range Targets], [Directed Energy Targets]] 
+    targetDelegations = [[],[],[],[]]
+    for target in response:
+        # if assigned weapon is short range, add to the short range targets 
+        if target[1] == weaponList[0].weaponName:
+            targetDelegations[0].append(int(target[0])) 
+        # if assigned weapon is medium range, add to the medium range targets 
+        elif target[1] == weaponList[1].weaponName:
+            targetDelegations[1].append(int(target[0])) 
+        # if assigned weapon is long range, add to the long range targets 
+        elif target[1] == weaponList[2].weaponName:
+            targetDelegations[2].append(int(target[0])) 
+        # if none else, it should be a directed energy target, thus add to the D.E targets 
+        else:
+            targetDelegations[3].append(int(target[0])) 
+      
+    weaponThreads = []  
+    for weaponIndex, weaponSystem in enumerate(weaponList):
+        weaponThread = Thread(target=startWeaponSystem, args=(weaponSystem, [weaponIndex],(0,0,0), droneDirectory))
+        weaponThread.start()
+        weaponThreads.append(weaponThread)
+        
+    for thread in weaponThreads:
+        thread.join()
+        
+        # ic(weaponFiring)
+        # droneID = int(weaponFiring[0])
+        # weapon = weaponFiring[1]
+        # target = droneDirectory[droneID]
+        # if target.currentStatus == "Alive":
+        #     deletionAttempt = destroyDrone(droneID=droneID)
+        #     if deletionAttempt.startswith("Successfully deleted entity"):
+        #         target.currentStatus="Dead"
             
-            ic(f"Drone {droneID} Destroyed With {weapon}")
+        #     ic(f"Drone {droneID} Destroyed With {weapon}")
     
     
     
@@ -285,7 +346,7 @@ def run_BOWSER_simulation(spawnRange: set, algorithmChoice: str, numberOfDrones:
 
 if __name__ == "__main__":
     
-    run_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="DQN", numberOfDrones=10)
+    run_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="DQN", numberOfDrones=3)
     # print("s")
 
 

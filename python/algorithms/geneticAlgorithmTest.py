@@ -219,5 +219,5 @@ def runGA(threatFileLocation):
 
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     runGA("dataFiles/simulationDroneLocations.csv")
