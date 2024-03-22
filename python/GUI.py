@@ -3,6 +3,7 @@ from algorithms.dqn_agent import runDQN
 from algorithms.geneticAlgorithmTest import runGA
 from algorithms.munkres_algorithm import runMunkres
 from algorithms.simulated_annealing import runSimulatedAnnealing
+from algorithms.ACO import runACO
 from tkinter import *
 from PIL import Image, ImageTk
 import customtkinter as ctk
@@ -125,6 +126,12 @@ def submit():
         leaker_percentage = leaker_percentage * 100
         outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         #sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
+        print(response)
+    
+    elif algorithm == "ACO":
+        response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+        leaker_percentage = (1.00 - leaker_percentage) * 100
+        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
         print(response)
     
     save_list = [algorithm,leaker_percentage]
@@ -363,7 +370,7 @@ unitDropdown.place(x=480,y=210)
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
 algoLabel.pack(pady=5)
 algoLabel.place(x=345,y=370)
-algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing"]
+algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "ACO"]
 algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
 algoDropdown.place(x=320,y=410)
