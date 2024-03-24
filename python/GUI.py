@@ -214,7 +214,7 @@ tk.Canvas.create_circle = _create_circle
 canvas.create_circle(250, 250, 10, fill="#BBB", outline="")
 
 
-def showRange():
+def showRange(event):
     canvas = tk.Canvas(root, width=500, height=500, borderwidth=0, highlightthickness=0,
                     bg="black")
     canvas.pack(pady=20)
@@ -320,24 +320,30 @@ def openNewWindow():
 rLabel = ctk.CTkLabel(root, text="Spawn Range")
 rLabel.pack(pady=5)
 rLabel.place(x=350,y=150)
+
 rminEntry = ctk.CTkEntry(root, placeholder_text="Min")
 rminEntry.pack(pady=10)
 rminEntry.place(x=320,y=190)
+rminEntry.bind("<KeyRelease>",showRange)
+
 rmaxEntry = ctk.CTkEntry(root, placeholder_text="Max")
 rmaxEntry.pack(pady=10)
 rmaxEntry.place(x=320,y=230)
+rmaxEntry.bind("<KeyRelease>",showRange)
 
 angleEntry = ctk.CTkSlider(root, from_=1, to=359, command=angleSlider)
 angleEntry.pack(pady=2)
 angleEntry.set(1)
 angleEntry.place(x=290,y=270)
+angleEntry.bind("<ButtonRelease>",showRange)
+
 angleLabel = ctk.CTkLabel(root, text=f"Angle: {angleEntry.get()} degree")
 angleLabel.pack(pady=2)
 angleLabel.place(x=345,y=290)
 
-rangeButton = ctk.CTkButton(root, text="View Range", command=showRange)
-rangeButton.pack(pady=5)
-rangeButton.place(x=320,y=325)
+#rangeButton = ctk.CTkButton(root, text="View Range", command=showRange)
+#rangeButton.pack(pady=5)
+#rangeButton.place(x=320,y=325)
 
 radarLabel = ctk.CTkLabel(root, text="Visualize Spawn Range")
 radarLabel.pack(pady=5)
@@ -369,31 +375,31 @@ unitDropdown.place(x=480,y=210)
 
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
 algoLabel.pack(pady=5)
-algoLabel.place(x=345,y=370)
+algoLabel.place(x=345,y=340)
 algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "ACO"]
 algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
-algoDropdown.place(x=320,y=410)
+algoDropdown.place(x=320,y=370)
 
 threatVar = tk.IntVar(value=1)
 threatScale = ctk.CTkSlider(root, from_=1, to=10, variable=threatVar, command=updateThreatLabel)
 threatScale.pack(pady=10)
-threatScale.place(x=290,y=450)
+threatScale.place(x=290,y=410)
 currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threatVar.get()}")
 currentThreatLabel.pack(pady=5)
-currentThreatLabel.place(x=310,y=470)
+currentThreatLabel.place(x=310,y=430)
 
 moreFeaturesButton = ctk.CTkButton(root, text="More Features", command=openNewWindow)
 moreFeaturesButton.pack(pady=5)
-moreFeaturesButton.place(x=320,y=510)
+moreFeaturesButton.place(x=320,y=470)
 
 submitButton = ctk.CTkButton(root, text="Start", command=submit)
 submitButton.pack(pady=5)
-submitButton.place(x=320,y=550)
+submitButton.place(x=320,y=510)
 
 outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
 outputLabel.pack(pady=10)
-outputLabel.place(x=320,y=700)
+outputLabel.place(x=320,y=660)
 
 #dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: No Tracked Runs in Current Session", wraplength=200)
 #dleaker.pack(side="right")
