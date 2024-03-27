@@ -4,6 +4,7 @@ from random import choices
 import math
 import pygad
 import time 
+import time
 
 
 def runGA(threatFileLocation):
@@ -40,6 +41,10 @@ def runGA(threatFileLocation):
     def fitness_func(ga_instance, solution, solution_idx):
         success_count = 0
         weapons_quantity = [8, 20, 25, 10]
+        #Initialize last fire times for each weapon
+        last_fire_times = [0] * len(weapons_quantity)
+        #Cooldown time in seconds
+        cooldown_time = 5
         #Initiate last fire times for each weapon
         last_fire_times = [0] * len(weapons_quantity)
         #Cooldown times in seconds
@@ -55,6 +60,15 @@ def runGA(threatFileLocation):
                 check = float(inputs_position[threat][3])
                 if curr_distance < float(inputs_position[threat][3]):
                     continue
+    #Cooldown system implementation 
+    #Get current time 
+                current_time = time.time()
+    #Chech if the cooldown time has passed 
+                if current_time < last_fire_times[solution[threat]-1] + cooldown_time:
+                    continue
+                else:
+    #Update the last fire time for the weapon used
+                    last_fire_times[solution[threat]-1] = current_time
     #Cooldown system implementation
     #Get current time
                 current_time = time.time()
@@ -152,6 +166,9 @@ def runGA(threatFileLocation):
         print("Generation : ", ga_instance.generations_completed)
         print("Current best solution:\n", ga_instance.best_solution()[0])
         print("Fitness of the best solution :", ga_instance.best_solution()[1], "\n")
+        # Calculate Leaker Percentage
+        leakers_percentage = 100 * (1 - ga_instance.best_solution()[1])
+        
         if ga_instance.generations_completed == num_generations :
             tempList = []
             

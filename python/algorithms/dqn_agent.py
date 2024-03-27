@@ -1,10 +1,12 @@
 from gymnasium import Env, spaces
+from gymnasium import Env, spaces
 from stable_baselines3 import DQN
 from stable_baselines3.dqn import MlpPolicy
 import numpy as np
 import math
 import random
 import csv
+import logging
 
 random.seed(42)
 np.random.seed(42)
@@ -107,6 +109,11 @@ class BattleEnv(Env):
         threat_index = action // self.num_weapons
         # Assign weapon to threat
         self.state[threat_index] = weapon_index
+        # Action is now an index representing which weapon is assigned to which threat
+        weapon_index = action % self.num_weapons
+        threat_index = action // self.num_weapons
+        # Assign weapon to threat
+        self.state[threat_index] = weapon_index
         observation = self.get_observation()
         # Calculate reward for current weapon-threat assignment
         reward = self.calculate_reward()
@@ -121,6 +128,7 @@ class BattleEnv(Env):
         return observation, reward, done, {}
 
     def get_observation(self):
+        return self.state
         return self.state
 
     # Calculate reward for current weapon-threat assignment
@@ -249,9 +257,9 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward
-        print("=========================================================")
-        print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
-        print("=========================================================")
+        logging.info("=========================================================")
+        logging.info(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
+        logging.info("=========================================================")
         # Save model after each episode if save_path provided
         if save_path is not None:
             model.save(save_path)
