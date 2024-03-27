@@ -1,46 +1,51 @@
 # Battlefield Optimization for Weapon System Engagement Resiliency (BOWSER) - Group 21
+<div style = "text-align:center;">
 
-One Paragraph of project description goes here
+<img src="https://github.com/mendoska/group21/blob/main/BOWSER_LOGO_FINAL.png" width="300">
 
-## Getting Started
+<u> **Team Members** </u>
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Solan Degefa
+
+Daniel Dix 
+
+Liliana Ramos 
+
+Haoran Xiao 
+
+Alexander Mendoza 
+
+<u> Advisor </u>
+
+Xiangnan Zhong  
+</div>
+
+## Project Summary
+
+This project uses optimization algorithms for Advanced Battle Management Aids against drone swarms, safeguarding infrastructure. Using models of swarm behavior and available resources, it assesses ABMA performance in defense strategies. The aim: enhance the protection of critical infrastructure
+
+
+## Built With
+
+* Python
+* Tkinter (for GUI)
+    * CustomTkinter (tkinter extension)
+* ROS2Swarm
+* PX4 Autopilot 
+
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+Having the above technologies will be needed to recreate this project. 
 
-Required python packages thus far:
-```
-customtkinter
-gym
-stable-baselines3
-pygad
-scipy
-shimmy
-colcon
-```
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
+To install ROS2Swarm and relative technologies associated to it follow this guide: 
 
-Say what the step will be
-
-- Within simulation/swarm_ws, run
-```
-git clone https://github.com/sdegefa/ROS2swarm_B
-cd ROS2swarmB
-pipenv install
-colcon build
-```
+https://github.com/ROS2swarm/ROS2swarm/blob/master/INSTALL_GUIDE.md
 
 
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
@@ -54,19 +59,12 @@ Explain what these tests test and why
 Give an example
 ```
 
-### And coding style tests
 
-Explain what these tests test and why
-
-```
-Give an example
-```
 
 ## Deployment
 
 Add additional notes about how to deploy this on a live system
 
-## Built With
 
 
 
@@ -75,18 +73,56 @@ Add additional notes about how to deploy this on a live system
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
 
-## Authors
+## Patents
 
-* **Billie Thompson** - *ReadMe Template* - [PurpleBooth](https://github.com/PurpleBooth)
+______________________________________________________________________________________________________
+Patent Number: CN110442135B 
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+Title: Unmanned ship path planning method and system based on improved genetic algorithm 
 
-## License
+Inventors: 辛峻峰, 张永波, 李世鑫, 杨奉儒, 李鹏昊 
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+Assignee: Nanjing Saiwof Ocean Technology Co ltd 
+
+Date Filed: 8/6/2019 
+
+Date Granted: 8/21/2020 
+
+Number of Claims: 8 
+______________________________________________________________________________________________________
+
+Patent Number: CN115951598A 
+
+Title: Virtual-real combined simulation method, device and system for multiple unmanned aerial vehicles 
+
+Inventors: 龚建兴, 黄健, 刘权, 毛子泉, 高家隆, 胡海 
+
+Assignee: National University of Defense Technology 
+
+Date Filed: 2023-01-16 
+
+Number of Claims: 10 
+
+______________________________________________________________________________________________________
+
+Patent Number: US11473913B2 
+
+Title: System and method for service oriented cloud based management of internet of drones 
+
+Inventors: Koen Anis Koubaa, Riyadh ( SA ) 
+
+Assignee: Prince Sultan University 
+
+Date Filed: 02/13/2020 
+
+Date granted: 10/18/2022 
+
+Number of Claims: 18 
+______________________________________________________________________________________________________
+
+
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* FAU Engineering Department
+* ROS2Swarm GitHub : https://github.com/ROS2swarm/ROS2swarm

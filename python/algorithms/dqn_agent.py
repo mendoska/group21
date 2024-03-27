@@ -5,9 +5,13 @@ import numpy as np
 import math
 import random
 import csv
+import logging
 
 random.seed(42)
 np.random.seed(42)
+
+# Set up logging
+logging.basicConfig(filename='training.log', level=logging.INFO, filemode='w')
 
 # DEFINE WEAPON ATTRIBUTES
 class Weapon:
@@ -75,6 +79,10 @@ class BattleEnv(Env):
     def __init__(self, weapons, threats):
         self.weapons, self.num_weapons = weapons, len(weapons)
         self.threats, self.num_threats = threats, len(threats)
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
         # Simplify state space: Each element in the state array represents a threat, 
         # and its value is the index of the weapon assigned to it, -1 if no weapon is assigned
         self.state = np.full(self.num_threats, -1, dtype=int)
@@ -95,8 +103,12 @@ class BattleEnv(Env):
         random.shuffle(self.weapons)
         # Shuffle order of threats
         random.shuffle(self.threats)
+<<<<<<< HEAD
         # Initially assign a random weapon to each threat
         self.state = np.array([random.randint(0, self.num_weapons - 1) for _ in range(self.num_threats)], dtype=int)
+=======
+        self.state = np.full(self.num_threats, -1, dtype=int)
+>>>>>>> main
         self.current_threat = 0
         return self.get_observation()
 
@@ -126,13 +138,20 @@ class BattleEnv(Env):
     # Calculate reward for current weapon-threat assignment
     def calculate_reward(self):
         total_reward = 0
+<<<<<<< HEAD
         # Penalty for unassigned weapons
         unassigned_penalty = -10
+=======
+>>>>>>> main
         for threat_index, weapon_index in enumerate(self.state):
             if weapon_index != -1:  # Check if weapon is assigned
                 weapon = self.weapons[weapon_index]
                 threat = self.threats[threat_index]
+<<<<<<< HEAD
                 weapon_pk = weapon.get_pk()["bomber"]
+=======
+                weapon_pk = weapon.get_pk()[threat.get_name()]
+>>>>>>> main
                 reward = weapon_pk * proximity(weapon, threat)
                 total_reward += reward
             else:
@@ -185,11 +204,17 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
 
     # Define hyperparameters
     policy_kwargs = dict(net_arch=[128, 128, 128])  # Specify NN architecture for agent: MLP with 3 hidden layers of 128 neurons
+<<<<<<< HEAD
     learning_rate = 0.01  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
     learning_starts = 100 # Define number of initial steps to take in environment before training
     # initial_exploration_fraction = 1.0  # Start with full exploration
     # exploration_decay = 0.99  # Decay rate for exploration fraction per episode
     exploration_fraction = 0.5
+=======
+    learning_rate = 0.001  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
+    learning_starts = 1000  # Define number of initial steps to take in environment before training
+    exploration_fraction = 0.6  # Defines fraction of episodes agent will explore environment vs. using learned policy
+>>>>>>> main
 
     batch_size = 64
     buffer_size = 10000
@@ -226,9 +251,14 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
             # Print weapon assignments for current threat
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
+<<<<<<< HEAD
             print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
             if test:
                 response.append([current_threat, [weapon.get_name() for weapon in assigned_weapons]])
+=======
+            logging.info(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
+
+>>>>>>> main
             # Identify leakers
             combined_pk = sum([weapon.get_pk()["bomber"] for weapon in assigned_weapons])
             # 1 = leaker, 0 = non-leaker
@@ -249,18 +279,24 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward
-        print("=========================================================")
-        print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
-        print("=========================================================")
+        logging.info("=========================================================")
+        logging.info(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
+        logging.info("=========================================================")
         # Save model after each episode if save_path provided
         if save_path is not None:
             model.save(save_path)
+<<<<<<< HEAD
     print(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
     print("=========================================================")
     leaker_percentage = (leaker_count / (env.num_threats * num_episodes)) * 100
     if test: 
         return response, leaker_count
     return model, rewards_over_time, leaker_percentage
+=======
+    logging.info(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
+    logging.info("=========================================================")
+    return model, rewards_over_time
+>>>>>>> main
 
 
 # START TRAINING PROCESS
@@ -292,6 +328,10 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
     return savePath, leaker_percentage
 
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
+<<<<<<< HEAD
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
 
 # runDQN(savePath="python/dataFiles/trained_model.zip", train=True)
+=======
+#                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
+>>>>>>> main

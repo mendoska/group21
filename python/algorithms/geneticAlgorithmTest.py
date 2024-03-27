@@ -3,7 +3,7 @@ import numpy as np
 from random import choices
 import math
 import pygad
-import time 
+import time
 
 
 def runGA(threatFileLocation):
@@ -152,6 +152,9 @@ def runGA(threatFileLocation):
         print("Generation : ", ga_instance.generations_completed)
         print("Current best solution:\n", ga_instance.best_solution()[0])
         print("Fitness of the best solution :", ga_instance.best_solution()[1], "\n")
+        # Calculate Leaker Percentage
+        leakers_percentage = 100 * (1 - ga_instance.best_solution()[1])
+        
         if ga_instance.generations_completed == num_generations :
             tempList = []
             
