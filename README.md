@@ -36,7 +36,16 @@ This project uses optimization algorithms for Advanced Battle Management Aids ag
 
 ### Prerequisites
 
-Having the above technologies will be needed to recreate this project. 
+Required python packages thus far:
+```
+customtkinter
+gym
+stable-baselines3
+pygad
+scipy
+shimmy
+colcon
+```
 
 
 ### Installing
