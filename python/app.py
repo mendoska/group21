@@ -10,6 +10,10 @@ from csv import DictWriter, reader
 from math import cos, sin, pi
 from yaml import safe_load, dump
 
+
+NO_SIM_MODE = False
+
+
 START_FLAG = 0
 SYSTEM_RUNNING = False
 START_COUNTER = 0
@@ -60,7 +64,7 @@ def initializeWeaponsFromFile(threat_file)-> list:
             weaponPlacement = Weapon(weaponID=weaponID,
                                      weaponName=threatEntry[0],
                                      location=[threatEntry[1], threatEntry[2], threatEntry[3]],
-                                     ammunitionQuantity=threatEntry[5],
+                                     ammunitionQuantity=int(threatEntry[5]),
                                      firingRate=threatEntry[6]
                                     )
             weapons.append(weaponPlacement)
@@ -110,11 +114,25 @@ options:
         1 - Print Lines While Waiting (Used for monitoring world creation)
     
 """
+
 def waitForLineInSubprocess(subprocess:Popen, targetStr:str, option:int = 0):
     line = subprocess.stdout.readline()
     while(not targetStr in line):
         if option == 1:
-            ic(line) # prints current line to verify what process is doing
+          # prints current line to verify what process is doing
+            ic(line)
+        line = subprocess.stdout.readline()
+    print(line)
+    return
+
+
+
+def waitForLineInSubprocess(subprocess:Popen, targetStr:str, option:int = 0):
+    line = subprocess.stdout.readline()
+    while(not targetStr in line):
+        if option == 1:
+            if line != '':
+                ic(line) # prints current line to verify what process is doing
         line = subprocess.stdout.readline()
     print(line)
     return
@@ -177,7 +195,7 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     subprocesses[f"robot_{droneID}"] = droneSubprocess
     
     # wait for signal that drone has reached the origin, then begin the process of deleting robot (Checks twice because false flags have appeared)
-    waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=1)
+    waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
     waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0)
     droneDirectory[droneID].currentStatus="Leaker"
     LEAKER_COUNT += 1
@@ -191,6 +209,9 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     ic(f"Drone {droneID} Process Killed")
     
     return 
+    
+    
+    
     
 
 def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int) -> tuple:
@@ -221,7 +242,7 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
     threads = []
     for x in range(numberOfDrones):
         # Create a thread for each drone
-        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, spawnRange, locationDirectory, (float(x+1), float(x+1) )))
+        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, spawnRange, locationDirectory, (1.0, 0.5 )))
         thread.start()
         threads.append(thread)
     # Once each drone thread has been created, A final "timer" thread is started which monitors the number of threads that have been executed
@@ -260,9 +281,14 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
         from algorithms.simulated_annealing import runSimulatedAnnealing
         response, algorithm_leaker_percentage = runSimulatedAnnealing()
         leaker_percealgorithm_leaker_percentagenalgorithm_leaker_percentagetage *= 100
+    
+    elif algorithmChoice == "ACO":
+        from algorithms.ACO import runACO
+        response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+        leaker_percentage = (1.00 - leaker_percentage) * 100
+    
     else:
         raise "Invalid Algorithm Choice"
-    
     end = time()
     
     """Handle Drones in Simulation According to Algorithm Results"""
@@ -299,19 +325,7 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
         
     for thread in weaponThreads:
         thread.join()
-        
-        # ic(weaponFiring)
-        # droneID = int(weaponFiring[0])
-        # weapon = weaponFiring[1]
-        # target = droneDirectory[droneID]
-        # if target.currentStatus == "Alive":
-        #     deletionAttempt = destroyDrone(droneID=droneID)
-        #     if deletionAttempt.startswith("Successfully deleted entity"):
-        #         target.currentStatus="Dead"
             
-        #     ic(f"Drone {droneID} Destroyed With {weapon}")
-    
-    
     
     try:
         for subprocessID in subprocesses:
@@ -333,15 +347,12 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
 
     simulation_leaker_percent = (LEAKER_COUNT / numberOfDrones) * 100 
     ic(simulation_leaker_percent, algorithm_leaker_percentage)
-    # ic("Calculate Simulation Leaker Percentage")
-    # # ic(results)
-    # print("Returned Output")
-    # ic(results["Weapon Selection"])
-    # print(" \n\n            -------------------------------------------------------------------------------------------------")
-    # print(f"            Simulated Leaker Percentage: XX.XX% | Algorithm Percentage: {results['Leaker Percentage']}%\n\n\n")
-    # print(f"                                      That Took {finishTime-startTime} Seconds")
 
     return simulation_leaker_percent, algorithm_leaker_percentage
+
+
+
+
 
 
 if __name__ == "__main__":

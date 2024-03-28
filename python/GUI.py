@@ -12,11 +12,13 @@ import pandas as pd
 import random 
 import time
 import csv
+from sim_app import simulate_BOWSER_simulation
 try:
     from app import run_BOWSER_simulation
     RUN_SIMULATION = False
 except:
     RUN_SIMULATION = False
+    
 
 
 masterTemplate =  "dataFiles/threat_location_original.csv"
@@ -83,58 +85,58 @@ def submit():
     if RUN_SIMULATION:
         simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
     else:
-        simulation_leaker_percentage = 10.0
-        algorithm_leaker_percentage = 20.0
+        simulation_leaker_percentage, algorithm_leaker_percentage = simulate_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
+        
     
-    columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
-    df = pd.read_csv(masterTemplate, header=None, names=columns)
-    limited_df = df.sample(num_threats)
-    limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
-    if 'xMin' in globals() and 'xMax' in globals():
-        limited_df['x'] = [random.uniform(xMin, xMax) for _ in range(num_threats)]
-    if 'yMin' in globals() and 'yMax' in globals():
-        limited_df['y'] = [random.uniform(yMin, yMax) for _ in range(num_threats)]
-    if 'zMin' in globals() and 'zMax' in globals():
-        limited_df['z'] = [random.uniform(zMin, zMax) for _ in range(num_threats)]
-    limited_df.to_csv(threatFileLocation, index=False, header=False)
+    # columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
+    # df = pd.read_csv(masterTemplate, header=None, names=columns)
+    # limited_df = df.sample(num_threats)
+    # limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
+    # if 'xMin' in globals() and 'xMax' in globals():
+    #     limited_df['x'] = [random.uniform(xMin, xMax) for _ in range(num_threats)]
+    # if 'yMin' in globals() and 'yMax' in globals():
+    #     limited_df['y'] = [random.uniform(yMin, yMax) for _ in range(num_threats)]
+    # if 'zMin' in globals() and 'zMax' in globals():
+    #     limited_df['z'] = [random.uniform(zMin, zMax) for _ in range(num_threats)]
+    # limited_df.to_csv(threatFileLocation, index=False, header=False)
 
-    time.sleep(3)
-    if algorithm == "DQN":
-        current_num_threats = count_threats(threatFileLocation)
-        runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
-        time.sleep(3)
-        response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
-        #dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
-        print(response)
+    # time.sleep(3)
+    # if algorithm == "DQN":
+    #     current_num_threats = count_threats(threatFileLocation)
+    #     runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
+    #     time.sleep(3)
+    #     response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
+    #     #dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
+    #     print(response)
         
 
-    elif algorithm == "Genetic Algorithm":
-        response, leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-        leaker_percentage = (1.00 - leaker_percentage) * 100
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        #gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
+    # elif algorithm == "Genetic Algorithm":
+    #     response, leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+    #     leaker_percentage = (1.00 - leaker_percentage) * 100
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     #gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
 
-    elif algorithm == "Munkres":
-        response,leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        #mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
-        print(response)
+    # elif algorithm == "Munkres":
+    #     response,leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     #mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
+    #     print(response)
 
-    elif algorithm == "Simulated Annealing":
-        response,leaker_percentage = runSimulatedAnnealing()
-        leaker_percentage = leaker_percentage * 100
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        #sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
-        print(response)
+    # elif algorithm == "Simulated Annealing":
+    #     response,leaker_percentage = runSimulatedAnnealing()
+    #     leaker_percentage = leaker_percentage * 100
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     #sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
+    #     print(response)
     
-    elif algorithm == "ACO":
-        response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
-        leaker_percentage = (1.00 - leaker_percentage) * 100
-        outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-        print(response)
+    # elif algorithm == "ACO":
+    #     response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+    #     leaker_percentage = (1.00 - leaker_percentage) * 100
+    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
+    #     print(response)
     
-    save_list = [algorithm,leaker_percentage]
+    save_list = [algorithm,simulation_leaker_percentage]
     write_history(historyFile,save_list)
     savedList = read_history(historyFile)
     
