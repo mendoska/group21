@@ -13,6 +13,8 @@ import random
 import time
 import csv
 from sim_app import simulate_BOWSER_simulation
+import shutil
+
 try:
     from app import run_BOWSER_simulation
     RUN_SIMULATION = False
@@ -20,12 +22,16 @@ except:
     RUN_SIMULATION = False
     
 
+threat_coordinates = {}
 
 masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
+weaponFileOriginal = "dataFiles/weapon_data_original.csv"
 weaponFileLocation = "dataFiles/weapon_data.csv"
 dqnModelPath = "dataFiles/trained_model.zip"
 historyFile = "dataFiles/history.csv"
+
+shutil.copyfile(weaponFileOriginal, weaponFileLocation)
 
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
@@ -83,21 +89,24 @@ def submit():
     num_threats = int(threatScale.get())
     
     if RUN_SIMULATION:
-        simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
+        simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats, threatCoordinates=threat_coordinates)
     else:
         simulation_leaker_percentage, algorithm_leaker_percentage = simulate_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
         
     
+
     # columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
     # df = pd.read_csv(masterTemplate, header=None, names=columns)
     # limited_df = df.sample(num_threats)
     # limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
+
     # if 'xMin' in globals() and 'xMax' in globals():
     #     limited_df['x'] = [random.uniform(xMin, xMax) for _ in range(num_threats)]
     # if 'yMin' in globals() and 'yMax' in globals():
     #     limited_df['y'] = [random.uniform(yMin, yMax) for _ in range(num_threats)]
     # if 'zMin' in globals() and 'zMax' in globals():
     #     limited_df['z'] = [random.uniform(zMin, zMax) for _ in range(num_threats)]
+
     # limited_df.to_csv(threatFileLocation, index=False, header=False)
 
     # time.sleep(3)
@@ -108,9 +117,7 @@ def submit():
     #     response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
     #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
     #     #dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
-    #     print(response)
-        
-
+    #     print(response
     # elif algorithm == "Genetic Algorithm":
     #     response, leaker_percentage = runGA(threatFileLocation=threatFileLocation)
     #     leaker_percentage = (1.00 - leaker_percentage) * 100
@@ -194,7 +201,7 @@ def angleSlider(value):
 
 savedList = read_history(historyFile)
 
-logo = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(150,150))
+logo = ctk.CTkImage(light_image=Image.open('BOWSER_LOGO_FINAL.png'),size=(150,150))
 logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
 
 #yrh = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(40,40))
@@ -264,58 +271,79 @@ def openNewWindow():
     mwin.geometry('800x600')
     ctk.CTkLabel(mwin, text="Spawn Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
 
-    x_min, x_max = tk.DoubleVar(), tk.DoubleVar()
-    y_min, y_max = tk.DoubleVar(), tk.DoubleVar()
-    z_min, z_max = tk.DoubleVar(), tk.DoubleVar()
+    rangemin = int(rminEntry.get())
+    rangemax = int(rmaxEntry.get())
+    global threat_coordinates
 
-    def updateXmin(value):
-        xMinLabel.configure(text=f"X Min: {int(value)}")
-    def updateXmax(value):
-        xMaxLabel.configure(text=f"X Max: {int(value)}")
-    def updateYmin(value):
-        yMinLabel.configure(text=f"Y Min: {int(value)}")
-    def updateYmax(value):
-        yMaxLabel.configure(text=f"Y Max: {int(value)}")
-    def updateZmin(value):
-        zMinLabel.configure(text=f"Z Min: {int(value)}")
-    def updateZmax(value):
-        zMaxLabel.configure(text=f"Z Max: {int(value)}")
+    def saveThreatCoordinates():
+        global threat_coordinates
+        updated_threat_coordinates = {}
+        for i in range(1, threatVar.get() + 1):
+            x = threat_coordinates[f"threat_{i}_x"].get()
+            y = threat_coordinates[f"threat_{i}_y"].get()
+            z = threat_coordinates[f"threat_{i}_z"].get()
+            if rangemin <= abs(int(x)) <= rangemax and rangemin <= abs(int(y)) <= rangemax and 0 <= int(z):
+                print(f"Threat {i}: x={x}, y={y}, z={z}")
+                updated_threat_coordinates[i] = {"x": int(x), "y": int(y), "z": int(z)}
+            else:
+                print(f"Coordinates for Threat {i} are not within the range.")
+        threat_coordinates = updated_threat_coordinates
 
-    
-    xMinLabel = ctk.CTkLabel(mwin, text=f"X Min: {x_min.get()}")
-    xMinLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=x_min, command=updateXmin).pack(pady=5)
+    # Current bug where the sliders position affects the threat count by one. 
+    for i in range(1, threatVar.get() + 1):
+        frame = tk.Frame(mwin)
+        frame.pack(pady=2)
+        
+        tk.Label(frame, text=f"Threat {i}").pack(side=tk.LEFT)
+        tk.Label(frame, text="x:").pack(side=tk.LEFT)
+        threat_coordinates[f"threat_{i}_x"] = tk.Entry(frame)
+        threat_coordinates[f"threat_{i}_x"].pack(side=tk.LEFT, pady=2)
+        
+        tk.Label(frame, text="y:").pack(side=tk.LEFT)
+        threat_coordinates[f"threat_{i}_y"] = tk.Entry(frame)
+        threat_coordinates[f"threat_{i}_y"].pack(side=tk.LEFT, pady=2)
+        
+        tk.Label(frame, text="z:").pack(side=tk.LEFT)
+        threat_coordinates[f"threat_{i}_z"] = tk.Entry(frame)
+        threat_coordinates[f"threat_{i}_z"].pack(side=tk.LEFT, pady=2)
 
-    xMaxLabel = ctk.CTkLabel(mwin, text=f"X Max: {x_max.get()}")
-    xMaxLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=x_max, command=updateXmax).pack(pady=5)
+    tk.Button(mwin, text="Save Threat Coordinates", command=saveThreatCoordinates).pack(pady=10)
 
-    yMinLabel = ctk.CTkLabel(mwin, text=f"Y Min: {y_min.get()}")
-    yMinLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=y_min, command=updateYmin).pack(pady=5)
+    ctk.CTkLabel(mwin, text="Set Weapon Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
+    weapon_coordinates = {}
 
-    yMaxLabel = ctk.CTkLabel(mwin, text=f"Y Max: {y_max.get()}")
-    yMaxLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=-1000, to=1000, variable=y_max, command=updateYmax).pack(pady=5)
+    def saveWeaponCoordinates():
+        with open(weaponFileLocation, 'r') as file:
+            lines = file.readlines()
+        with open(weaponFileLocation, 'w') as file:
+            for line in lines:
+                split_line = line.split(',')
+                weapon_name = split_line[0]
+                if weapon_name in weapon_coordinates:
+                    coords = weapon_coordinates[weapon_name]          
+                    split_line[1] = str(coords['x'].get())
+                    split_line[2] = str(coords['y'].get())
+                    updated_line = ','.join(split_line)
+                    file.write(updated_line)
+                else:
+                    file.write(line)
+        print("Weapon coordinates updated.")
 
-    zMinLabel = ctk.CTkLabel(mwin, text=f"Z Min: {z_min.get()}")
-    zMinLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=0, to=10000, variable=z_min, command=updateZmin).pack(pady=5)
+    for weapon in ["long range missile", "medium range missile", "short range missile", "directed energy"]:
+        frame = tk.Frame(mwin)
+        frame.pack(pady=2)
+        
+        tk.Label(frame, text=f"{weapon}").pack(side=tk.LEFT)
+        tk.Label(frame, text="x:").pack(side=tk.LEFT)
+        weapon_coordinates[weapon] = {}
+        weapon_coordinates[weapon]['x'] = tk.Entry(frame)
+        weapon_coordinates[weapon]['x'].pack(side=tk.LEFT, pady=2)
+        
+        tk.Label(frame, text="y:").pack(side=tk.LEFT)
+        weapon_coordinates[weapon]['y'] = tk.Entry(frame)
+        weapon_coordinates[weapon]['y'].pack(side=tk.LEFT, pady=2)
 
-    zMaxLabel = ctk.CTkLabel(mwin, text=f"Z Max: {z_max.get()}")
-    zMaxLabel.pack(pady=5)
-    ctk.CTkSlider(mwin, from_=0, to=10000, variable=z_max, command=updateZmax).pack(pady=5)
-
-
-    def saveSettings():
-        global xMin, xMax, yMin, yMax, zMin, zMax
-        xMin, xMax = x_min.get(), x_max.get()
-        yMin, yMax = y_min.get(), y_max.get()
-        zMin, zMax = z_min.get(), z_max.get()
-        mwin.destroy()
-
-    saveButton = ctk.CTkButton(mwin, text="Save", command=saveSettings)
-    saveButton.pack(pady=10)
+    tk.Button(mwin, text="Save Weapon Coordinates", command=saveWeaponCoordinates).pack(pady=10)
 
     mwin.mainloop()
 

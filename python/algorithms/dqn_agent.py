@@ -1,12 +1,10 @@
 from gymnasium import Env, spaces
-from gymnasium import Env, spaces
 from stable_baselines3 import DQN
 from stable_baselines3.dqn import MlpPolicy
 import numpy as np
 import math
 import random
 import csv
-import logging
 
 random.seed(42)
 np.random.seed(42)
@@ -109,11 +107,6 @@ class BattleEnv(Env):
         threat_index = action // self.num_weapons
         # Assign weapon to threat
         self.state[threat_index] = weapon_index
-        # Action is now an index representing which weapon is assigned to which threat
-        weapon_index = action % self.num_weapons
-        threat_index = action // self.num_weapons
-        # Assign weapon to threat
-        self.state[threat_index] = weapon_index
         observation = self.get_observation()
         # Calculate reward for current weapon-threat assignment
         reward = self.calculate_reward()
@@ -128,7 +121,6 @@ class BattleEnv(Env):
         return observation, reward, done, {}
 
     def get_observation(self):
-        return self.state
         return self.state
 
     # Calculate reward for current weapon-threat assignment
@@ -197,7 +189,7 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
     learning_starts = 100 # Define number of initial steps to take in environment before training
     # initial_exploration_fraction = 1.0  # Start with full exploration
     # exploration_decay = 0.99  # Decay rate for exploration fraction per episode
-    exploration_fraction = 0.5
+    exploration_fraction = 0.5 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
 
     batch_size = 64
     buffer_size = 10000
@@ -257,9 +249,9 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward
-        logging.info("=========================================================")
-        logging.info(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
-        logging.info("=========================================================")
+        print("=========================================================")
+        print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
+        print("=========================================================")
         # Save model after each episode if save_path provided
         if save_path is not None:
             model.save(save_path)
