@@ -4,6 +4,8 @@ import math
 import time
 import random
 import matplotlib.pyplot as plt
+from icecream import ic
+
 
 def runACO(threatFileLocation):
     num_ants = 6
@@ -35,7 +37,7 @@ def runACO(threatFileLocation):
         inputs = threats.readlines()
         for line in inputs:
             as_list = line.split(',')
-            function_inputs.append(as_list[0])
+            function_inputs.append(as_list[1])
             inputs_position.append([as_list[1], as_list[2], as_list[3], as_list[4]])
 
     # Initialize pheromone trails
@@ -161,8 +163,29 @@ def runACO(threatFileLocation):
                 pheromone_trails[i][j] *= (1 - pheromone_evaporation_rate)
                 for solution in ant_solutions:
                     if solution[i] == j + 1:
+                        ic(evaluate_fitness(solution))
                         pheromone_trails[i][j] += pheromone_deposition_rate / evaluate_fitness(solution)
         return pheromone_trails
+
+
+    def print_results(solution):
+
+        res = []
+        for index, weapon in enumerate(solution):
+            if weapon == 1:
+                res.append([index, ['Long Range Missile']])
+                continue
+            if weapon == 2:
+                res.append([index, ['Medium Range Missile']])
+                continue
+            if weapon == 3:
+                res.append([index, ['Short Range Missile']])
+                continue
+            if weapon == 4:
+                res.append([index, ['Directed Energy']])
+                continue
+
+        return res
 
     # Main ACO loop
     best_solution = None
@@ -179,7 +202,7 @@ def runACO(threatFileLocation):
         pheromone_trails = update_pheromones(pheromone_trails, ant_solutions, best_solution)
         fitnesses.append(best_fitness)
     global response
-    response = fitnesses
+    response = print_results(solution=best_solution)
     #print(f"Iteration {iterations}\nBest solution: {best_solution},\nBest fitness: {best_fitness}")
     print("Iteration:", iterations)
     print("Final best solution found:", best_solution)
