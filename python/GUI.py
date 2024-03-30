@@ -89,9 +89,9 @@ def submit():
     num_threats = int(threatScale.get())
     
     if RUN_SIMULATION:
-        simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats, threatCoordinates=threat_coordinates)
+        simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
     else:
-        simulation_leaker_percentage, algorithm_leaker_percentage = simulate_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
+        simulation_leaker_percentage, algorithm_leaker_percentage = simulate_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats, threatCoordinates=threat_coordinates)
         
     
 
@@ -271,25 +271,27 @@ def openNewWindow():
     mwin.geometry('800x600')
     ctk.CTkLabel(mwin, text="Spawn Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
 
-    rangemin = int(rminEntry.get())
-    rangemax = int(rmaxEntry.get())
+    rangemin = float(rminEntry.get())
+    rangemax = float(rmaxEntry.get())
     global threat_coordinates
 
     def saveThreatCoordinates():
         global threat_coordinates
         updated_threat_coordinates = {}
         for i in range(1, threatVar.get() + 1):
-            x = threat_coordinates[f"threat_{i}_x"].get()
-            y = threat_coordinates[f"threat_{i}_y"].get()
-            z = threat_coordinates[f"threat_{i}_z"].get()
-            if rangemin <= abs(int(x)) <= rangemax and rangemin <= abs(int(y)) <= rangemax and 0 <= int(z):
+            x = float(threat_coordinates[f"threat_{i}_x"].get())
+            y = float(threat_coordinates[f"threat_{i}_y"].get())
+            z = float(threat_coordinates[f"threat_{i}_z"].get())
+            if rangemin <= abs(x) <= rangemax and rangemin <= abs(y) <= rangemax and 0 <= z:
                 print(f"Threat {i}: x={x}, y={y}, z={z}")
-                updated_threat_coordinates[i] = {"x": int(x), "y": int(y), "z": int(z)}
+                updated_threat_coordinates[i] = {"x": x, "y": y, "z": z}
             else:
                 print(f"Coordinates for Threat {i} are not within the range.")
         threat_coordinates = updated_threat_coordinates
+        # print(threat_coordinates)
 
     # Current bug where the sliders position affects the threat count by one. 
+    # Just move it slightly to the left wihtout changing the number and itll work.
     for i in range(1, threatVar.get() + 1):
         frame = tk.Frame(mwin)
         frame.pack(pady=2)

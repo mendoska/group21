@@ -82,7 +82,7 @@ def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, droneD
             ic(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
 
 
-def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int) -> tuple:
+def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int, threatCoordinates=None) -> tuple:
     global SYSTEM_RUNNING
     
     threatFileLocation = "dataFiles/simulationDroneLocations.csv"
@@ -108,14 +108,22 @@ def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDron
     for droneID in range(numberOfDrones):
         if spawnRange[0] > spawnRange[1]:
             raise ValueError("Minimum radius cannot be greater than maximum radius")
-         # Generate random angle within 0 to 2*pi
-        angle = uniform(0, 2 * pi)
-        # Generate random radius within the range [min_radius, max_radius]
-        radius = uniform(spawnRange[0], spawnRange[1])
-        # Calculate x and y coordinates using polar coordinates to Cartesian coordinates conversion
-        startingX = radius * cos(angle)
-        startingY = radius * sin(angle)
-        startingZ = 0
+        
+        if threatCoordinates and droneID+1 in threatCoordinates:
+            # Use user-defined coordinates
+            startingX = threatCoordinates[droneID+1]["x"]
+            startingY = threatCoordinates[droneID+1]["y"]
+            # startingZ = threatCoordinates[droneID+1]["z"]
+            startingZ = 0
+        else:
+            # Generate random angle within 0 to 2*pi
+            angle = uniform(0, 2 * pi)
+            # Generate random radius within the range [min_radius, max_radius]
+            radius = uniform(spawnRange[0], spawnRange[1])
+            # Calculate x and y coordinates using polar coordinates to Cartesian coordinates conversion
+            startingX = radius * cos(angle)
+            startingY = radius * sin(angle)
+            startingZ = 0
 
         # Starting Location  = [x,y,z]
     
