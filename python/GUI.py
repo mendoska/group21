@@ -199,6 +199,9 @@ def updateThreatLabel(value):
 def angleSlider(value):
     angleLabel.configure(text=f"Angle: {int(value)} degree")
 
+def directionSlider(value):
+    dirLabel.configure(text=f"Direction: {int(value)} degree")
+
 savedList = read_history(historyFile)
 
 logo = ctk.CTkImage(light_image=Image.open('BOWSER_LOGO_FINAL.png'),size=(150,150))
@@ -232,10 +235,11 @@ def showRange(event):
     rangemin = int(rminEntry.get())
     rangemax = int(rmaxEntry.get())
     angle = int(angleEntry.get())
+    direction = int(dirSlider.get())
     unit = unitDropdown.get()
 
-    startAngle = 90 - (angle/2)
-    endAngle = 90 + (angle/2)
+    startAngle = direction - (angle/2)
+    endAngle = direction + (angle/2)
     rSize = 10
 
     if rangemax > 900:
@@ -371,6 +375,16 @@ angleLabel = ctk.CTkLabel(root, text=f"Angle: {angleEntry.get()} degree")
 angleLabel.pack(pady=2)
 angleLabel.place(x=345,y=290)
 
+dirSlider = ctk.CTkSlider(root, from_=0, to=360, command=directionSlider)
+dirSlider.pack(pady=2)
+dirSlider.set(90)
+dirSlider.place(x=290,y=320)
+dirSlider.bind("<ButtonRelease>",showRange)
+
+dirLabel = ctk.CTkLabel(root, text=f"Direction: {dirSlider.get()} degree")
+dirLabel.pack(pady=2)
+dirLabel.place(x=345,y=340)
+
 #rangeButton = ctk.CTkButton(root, text="View Range", command=showRange)
 #rangeButton.pack(pady=5)
 #rangeButton.place(x=320,y=325)
@@ -405,31 +419,31 @@ unitDropdown.place(x=480,y=210)
 
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
 algoLabel.pack(pady=5)
-algoLabel.place(x=345,y=340)
+algoLabel.place(x=345,y=380)
 algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "ACO"]
 algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
-algoDropdown.place(x=320,y=370)
+algoDropdown.place(x=320,y=410)
 
 threatVar = tk.IntVar(value=1)
 threatScale = ctk.CTkSlider(root, from_=1, to=10, variable=threatVar, command=updateThreatLabel)
 threatScale.pack(pady=10)
-threatScale.place(x=290,y=410)
+threatScale.place(x=290,y=450)
 currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threatVar.get()}")
 currentThreatLabel.pack(pady=5)
-currentThreatLabel.place(x=310,y=430)
+currentThreatLabel.place(x=310,y=470)
 
 moreFeaturesButton = ctk.CTkButton(root, text="More Features", command=openNewWindow)
 moreFeaturesButton.pack(pady=5)
-moreFeaturesButton.place(x=320,y=470)
+moreFeaturesButton.place(x=320,y=510)
 
 submitButton = ctk.CTkButton(root, text="Start", command=submit)
 submitButton.pack(pady=5)
-submitButton.place(x=320,y=510)
+submitButton.place(x=320,y=550)
 
 outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
 outputLabel.pack(pady=10)
-outputLabel.place(x=320,y=660)
+outputLabel.place(x=320,y=700)
 
 #dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: No Tracked Runs in Current Session", wraplength=200)
 #dleaker.pack(side="right")
