@@ -111,13 +111,15 @@ class BattleEnv(Env):
         # Calculate reward for current weapon-threat assignment
         reward = self.calculate_reward()
         # Episode done if all threats assigned resources
-        done = (self.current_threat == self.num_threats - 1) and all(weapon_assigned != -1 for weapon_assigned in self.state)
+        done = (self.current_threat == self.num_threats - 1)
 
         # Ensure agent will assign weapons to new threat in next step
-        if self.current_threat < self.num_threats - 1:
-            self.current_threat += 1
-        else:
-            done = True  # Ensure the episode is marked as done
+        self.current_threat += 1
+        # Ensure a weapon is assigned to every threat by the end of the episode
+        if done:
+            for i, weapon_assigned in enumerate(self.state):
+                if weapon_assigned == -1:  # If any threat is unassigned, assign a random weapon
+                    self.state[i] = random.randint(0, self.num_weapons - 1)
         return observation, reward, done, {}
 
     def get_observation(self):
@@ -288,10 +290,14 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
     else:
         threat_data = use_testing_data(threatFilePath)
         response, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True, test=True, threat_file_path=threatFilePath)
+        for i, weapon_assigned in enumerate(response[0][1]):
+            if weapon_assigned == -1:  # If any threat is unassigned, assign a random weapon
+                response[0][1][i] = random.choice(test_weapons).get_name()
         return response, leaker_percentage
     return savePath, leaker_percentage
 
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
 
-# runDQN(savePath="python/dataFiles/trained_model.zip", train=True)
+# runDQN(savePath="dataFiles/trained_model.zip", train=True, num_threats=50)
+# runDQN(loadPath="dataFiles/trained_model.zip", train=False, threatFilePath="dataFiles/threat_locations.csv")
