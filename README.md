@@ -1,7 +1,7 @@
 # Battlefield Optimization for Weapon System Engagement Resiliency (BOWSER) - Group 21
 <div style = "text-align:center;">
 
-<img src="https://github.com/mendoska/group21/blob/main/BOWSER_LOGO_FINAL.png" width="300">
+<img src="https://github.com/mendoska/group21/blob/main/python/BOWSER_LOGO_FINAL.png" width="300">
 
 <u> **Team Members** </u>
 
