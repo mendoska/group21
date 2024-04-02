@@ -163,16 +163,16 @@ def runGA(threatFileLocation):
                     # print()
                     pass
                 if ga_instance.best_solution()[0][solution] == 1:
-                    tempList.append([function_inputs[solution], 'Long Range Missile'])
+                    tempList.append([function_inputs[solution], ['Long Range Missile']])
                     continue
                 if ga_instance.best_solution()[0][solution] == 2:
-                    tempList.append([function_inputs[solution], 'Medium Range Missile'])
+                    tempList.append([function_inputs[solution], ['Medium Range Missile']])
                     continue
                 if ga_instance.best_solution()[0][solution] == 3:
-                    tempList.append([function_inputs[solution], 'Short Range Missile'])
+                    tempList.append([function_inputs[solution], ['Short Range Missile']])
                     continue
                 if ga_instance.best_solution()[0][solution] == 4:
-                    tempList.append([function_inputs[solution], 'Directed Energy'])
+                    tempList.append([function_inputs[solution], ['Directed Energy']])
                     continue
             global response
             response = tempList    

@@ -220,14 +220,15 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
 
         # Keep going until all threats have been assigned weapons
         while not done:
+        
             # Choose action greedily (exploitation) or randomly (exploration) based on exploration_fraction
             action, _ = model.predict(obs, deterministic=np.random.rand() > exploration_fraction)
 
             # Print weapon assignments for current threat
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
-            print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
             if test:
+                print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
                 response.append([current_threat, [weapon.get_name() for weapon in assigned_weapons]])
             # Identify leakers
             combined_pk = sum([weapon.get_pk()["bomber"] for weapon in assigned_weapons])

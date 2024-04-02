@@ -8,8 +8,13 @@ from csv import DictWriter, reader
 from math import cos, sin, pi
 from yaml import safe_load, dump
 
+ic.configureOutput(prefix="", )
 
 LEAKER_COUNT = 0
+
+""" Meant Exclusively for the DQN response, returns True if all of the weapon delegations are empty """
+def check_empty_lists(lst):
+    return  any(sublist[1] == [] for sublist in lst)
 
 
 def writeDictToCSV(dictionary, csv_filename):
@@ -62,28 +67,25 @@ def initializeWeaponsFromFile(weapon_file:str)-> list:
 
 
 def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, droneDirectory:dict) -> None:
-    global LEAKER_COUNT
     ic(targetList)
     for targetID in targetList:
         
         targetThreat = droneDirectory[targetID]
         if targetThreat.currentStatus == "Alive":
             if weaponModel.ammunitionQuantity <= 0:
-                ic(f"{weaponModel.weaponName} has run out of ammunition, Drone {targetID} as become a leaker")
-                targetThreat.currentStatus = "Leaker"
-                LEAKER_COUNT += 1
+                print(f"{weaponModel.weaponName} has run out of ammunition, Cannot fire at Drone {targetID}")
+                continue
                 
-            ic(f"{weaponModel.weaponName} has fired once at Drone {targetID}")
+            print(f"{weaponModel.weaponName} has fired once at Drone {targetID}")
             weaponModel.ammunitionQuantity -= 1
             # deletionAttempt = destroyDrone(droneID=targetID)
             # if deletionAttempt.startswith("Successfully deleted entity"):
             targetThreat.currentStatus="Dead"
-            
-            ic(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
-
+            print(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
+    return
 
 def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int) -> tuple:
-    global SYSTEM_RUNNING
+    global SYSTEM_RUNNING, LEAKER_COUNT
     
     threatFileLocation = "dataFiles/simulationDroneLocations.csv"
     weaponFileLocation = "dataFiles/weapon_data.csv"
@@ -95,7 +97,7 @@ def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDron
 
             
     print(" ----------------------------- Welcome to the BOWSER Prototype ----------------------------- ")
-    print(" ------------------------------------- No Gazebo / ROS -------------------------------------- ")
+    print(" ------------------------------------ No Gazebo / ROS -------------------------------------- ")
    
     print(f"You have selected {numberOfDrones} Drones")
     ic(algorithmChoice)
@@ -134,14 +136,14 @@ def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDron
     if algorithmChoice == "DQN":
         from algorithms.dqn_agent import runDQN
         runDQN(savePath=dqnModelPath, train=True, num_threats=numberOfDrones)
-        sleep(3)
+        sleep(1)
         response, algorithm_leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
-    
+        if check_empty_lists(response):
+            raise Exception
     elif algorithmChoice == "Genetic Algorithm":
         from algorithms.geneticAlgorithmTest import runGA
         response, algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
-
+        algorithm_leaker_percentage *= 100
     elif algorithmChoice == "Munkres":
         from algorithms.munkres_algorithm import runMunkres
         response, algorithm_leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
@@ -149,12 +151,12 @@ def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDron
     elif algorithmChoice == "Simulated Annealing":
         from algorithms.simulated_annealing import runSimulatedAnnealing
         response, algorithm_leaker_percentage = runSimulatedAnnealing()
-        algorithm_leaker_percentage *= 100
+        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
     
     elif algorithmChoice == "ACO":
         from algorithms.ACO import runACO
-        response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
-        leaker_percentage = (1.00 - leaker_percentage) * 100
+        response,algorithm_leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
     
     else:
         raise "Invalid Algorithm Choice"
@@ -168,48 +170,68 @@ def simulate_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDron
     ic(subprocesses)
     
     print(f"Waiting {(end-start)} seconds to offset Sim Time to Real Time difference")
-    sleep(end-start)
+    # sleep(end-start)
     
     """
     Assigning Targets to defense weaponry, right now assuming there are 1 of each weapon system, all located at (0,0)
     """
     # [[short range targets],[medium Range Targets], [Long Range Targets], [Directed Energy Targets]] 
-    targetDelegations = [[],[],[],[]]
     ic(response)
     ic(weaponList)
+    for weaponDelegationIndex in range(len(response[0][1])):
+        ic(weaponDelegationIndex)
+        ic("Targetting")
+        targetDelegations = [[],[],[],[]]
+            # for the time being, The algorithms do not change the order in which the threats are entered, so their index should be the same as the ID
+        try:
+            for target in response:
+                droneID = int(target[0])
+                ic(droneID, droneDirectory[droneID].currentStatus)
+                if droneDirectory[droneID].currentStatus != "Dead":
+                        
+                    # if assigned weapon is short range, add to the short range targets 
+                    if target[1][weaponDelegationIndex].lower() == weaponList[0].weaponName:
+                        targetDelegations[0].append(droneID) 
+                    # if assigned weapon is medium range, add to the medium range targets 
+                    elif target[1][weaponDelegationIndex].lower() == weaponList[1].weaponName:
+                        targetDelegations[1].append(droneID) 
+                    # if assigned weapon is long range, add to the long range targets 
+                    elif target[1][0].lower() == weaponList[2].weaponName:
+                        targetDelegations[2].append(droneID) 
+                    # if none else, it should be a directed energy target, thus add to the D.E targets 
+                    else:
+                        targetDelegations[3].append(droneID)  
+        except IndexError:
+            pass
+        ic(targetDelegations)
+        weaponThreads = []  
+        for weaponIndex, weaponSystem in enumerate(weaponList):
+            weaponThread = Thread(target=startWeaponSystem, args=(weaponSystem, targetDelegations[weaponIndex],(0,0,0), droneDirectory))
+            weaponThread.start()
+            weaponThreads.append(weaponThread)
+
+        for thread in weaponThreads:
+            thread.join()
     
-    # for the time being, The algorithms do not change the order in which the threats are entered, so their index should be the same as the ID
-    for droneID, target in enumerate(response):
-        # if assigned weapon is short range, add to the short range targets 
-        if target[1][0].lower() == weaponList[0].weaponName:
-            targetDelegations[0].append(int(droneID)) 
-        # if assigned weapon is medium range, add to the medium range targets 
-        elif target[1][0].lower() == weaponList[1].weaponName:
-            targetDelegations[1].append(int(droneID)) 
-        # if assigned weapon is long range, add to the long range targets 
-        elif target[1][0].lower() == weaponList[2].weaponName:
-            targetDelegations[2].append(int(droneID)) 
-        # if none else, it should be a directed energy target, thus add to the D.E targets 
-        else:
-            targetDelegations[3].append(int(droneID))  
-      
-    ic(targetDelegations)
-    weaponThreads = []  
-    for weaponIndex, weaponSystem in enumerate(weaponList):
-        weaponThread = Thread(target=startWeaponSystem, args=(weaponSystem, targetDelegations[weaponIndex],(0,0,0), droneDirectory))
-        weaponThread.start()
-        weaponThreads.append(weaponThread)
-        
-    for thread in weaponThreads:
-        thread.join()
-        
+    for droneID in droneDirectory:
+        drone = droneDirectory[droneID]
+        if drone.currentStatus == "Alive":
+            drone.currentStatus = "Leaker"
+            LEAKER_COUNT += 1
 
     ic("No more Subprocesses, all robots should be dead")
 
+    ic(droneDirectory)
+    ic(weaponList)
     simulation_leaker_percent = (LEAKER_COUNT / numberOfDrones) * 100 
     ic(simulation_leaker_percent, algorithm_leaker_percentage)
   
     return simulation_leaker_percent, algorithm_leaker_percentage
 
+
 if __name__ == "__main__":
-        simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="DQN", numberOfDrones=3)
+    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="DQN", numberOfDrones=50)
+    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="Simulated Annealing", numberOfDrones=50)
+    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="Genetic Algorithm", numberOfDrones=50)
+    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="Munkres", numberOfDrones=50)
+    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="ACO", numberOfDrones=50)

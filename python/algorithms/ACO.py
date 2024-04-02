@@ -139,6 +139,28 @@ def runACO(threatFileLocation):
                     weapons_quantity[solution[threat] - 1] -= 1
                 continue
 
+            else:
+    # Distance constraint implementation
+                check = float(inputs_position[threat][3])
+                if curr_distance < float(inputs_position[threat][3]):
+                    continue
+    # Weapon quantity constraint implementation
+                if weapons_quantity[solution[threat]-1] <= 0:
+                    continue
+    # Reload time constraint implementation
+                if threat >= 1:
+                    if solution[threat-1] == solution[threat]:
+                        if random.choices([0, 1], [0.9, 0.1])[0] == 1:
+                            continue
+    # Shoot-Look-Shoot implementation
+                pk_management = random.choices([0, 1], [1 - bomber_info[int(solution[threat])], bomber_info[int(solution[threat])]])[0]
+                if pk_management == 0:
+                    success_count += random.choices([0, 1], [1 - bomber_info[int(solution[threat])], bomber_info[int(solution[threat])]])[0]
+                    weapons_quantity[solution[threat] - 1] -= 2
+                else:
+                    success_count += pk_management
+                    weapons_quantity[solution[threat] - 1] -= 1
+                continue
         fitness = success_count/len(function_inputs)
         return fitness
 
@@ -163,7 +185,7 @@ def runACO(threatFileLocation):
                 pheromone_trails[i][j] *= (1 - pheromone_evaporation_rate)
                 for solution in ant_solutions:
                     if solution[i] == j + 1:
-                        ic(evaluate_fitness(solution))
+                        # ic(evaluate_fitness(solution))
                         pheromone_trails[i][j] += pheromone_deposition_rate / evaluate_fitness(solution)
         return pheromone_trails
 
