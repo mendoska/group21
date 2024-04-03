@@ -307,6 +307,38 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
                     loss.backward()
                     optimizer.step()
 
+                     # Dual Replay Buffering
+                    experiences_dual = random.sample(replay_memory, batch_size)
+                    batch_state_dual, batch_action_dual, batch_reward_dual, batch_new_state_dual, batch_done_dual = zip(*experiences_dual)
+                    batch_action_dual = [a.item() for a in batch_action_dual]
+
+                    batch_state_dual = torch.tensor(batch_state_dual, dtype=torch.float)
+                    batch_action_dual = torch.tensor(batch_action_dual, dtype=torch.long)
+                    batch_reward_dual = torch.tensor(batch_reward_dual, dtype=torch.float)
+                    batch_new_state_dual = torch.tensor(batch_new_state_dual, dtype=torch.float)
+                    batch_done_dual = torch.tensor(batch_done_dual, dtype=torch.uint8)
+
+                    current_q_values_dual = model.compute_q_values(batch_state_dual)
+                    next_max_q_dual = model.compute_next_max_q(batch_new_state_dual)
+                    if torch.cuda.is_available():
+                        batch_reward_dual = batch_reward_dual.cuda()
+                        next_max_q_dual = next_max_q_dual.cuda()
+                        batch_done_dual = batch_done_dual.cuda()
+                    next_q_values_dual = batch_reward_dual + (gamma * next_max_q_dual) * (1 - batch_done_dual)
+
+                    current_q_values_dual = current_q_values_dual.float()
+                    next_q_values_dual = next_q_values_dual.float()
+
+                    current_q_values_dual.requires_grad = True
+                    next_q_values_dual.requires_grad = True
+
+                    loss_dual = F.smooth_l1_loss(current_q_values_dual, next_q_values_dual)
+
+                    for param in model.policy.parameters():
+                        param.grad = None 
+                    loss_dual.backward()
+                    optimizer.step()
+
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward

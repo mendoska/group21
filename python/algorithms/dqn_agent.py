@@ -111,13 +111,15 @@ class BattleEnv(Env):
         # Calculate reward for current weapon-threat assignment
         reward = self.calculate_reward()
         # Episode done if all threats assigned resources
-        done = (self.current_threat == self.num_threats - 1) and all(weapon_assigned != -1 for weapon_assigned in self.state)
+        done = (self.current_threat == self.num_threats - 1)
 
         # Ensure agent will assign weapons to new threat in next step
-        if self.current_threat < self.num_threats - 1:
-            self.current_threat += 1
-        else:
-            done = True  # Ensure the episode is marked as done
+        self.current_threat += 1
+        # Ensure a weapon is assigned to every threat by the end of the episode
+        if done:
+            for i, weapon_assigned in enumerate(self.state):
+                if weapon_assigned == -1:  # If any threat is unassigned, assign a random weapon
+                    self.state[i] = random.randint(0, self.num_weapons - 1)
         return observation, reward, done, {}
 
     def get_observation(self):
@@ -184,16 +186,16 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
     env = BattleEnv(weapon_lst, use_testing_data(threat_file_path) if use_actual_data else threat_lst)
 
     # Define hyperparameters
-    policy_kwargs = dict(net_arch=[128, 128, 128])  # Specify NN architecture for agent: MLP with 3 hidden layers of 128 neurons
-    learning_rate = 0.01  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
-    learning_starts = 100 # Define number of initial steps to take in environment before training
+    policy_kwargs = dict(net_arch=[256, 256, 256, 256])  # Specify NN architecture for agent: MLP with 4 hidden layers of 256 neurons
+    learning_rate = 0.005  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
+    learning_starts = 500 # Define number of initial steps to take in environment before training
     # initial_exploration_fraction = 1.0  # Start with full exploration
     # exploration_decay = 0.99  # Decay rate for exploration fraction per episode
-    exploration_fraction = 0.5 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
+    exploration_fraction = 0.8 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
 
-    batch_size = 64
-    buffer_size = 10000
-    target_update_interval = 500
+    batch_size = 128
+    buffer_size = 50000
+    target_update_interval = 1000
 
     # Load pre-trained model if load_path provided
     if load_path is not None:
@@ -289,6 +291,10 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
     else:
         threat_data = use_testing_data(threatFilePath)
         response, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True, test=True, threat_file_path=threatFilePath)
+        # Ensure a weapon is assigned to every threat
+        for i, weapon_assigned in enumerate(response[0][1]):
+            if weapon_assigned == -1:  # If any threat is unassigned, assign a random weapon
+                response[0][1][i] = random.choice(test_weapons).get_name()
         return response, leaker_percentage
     return savePath, leaker_percentage
 
