@@ -17,13 +17,14 @@ import shutil
 
 try:
     from app import run_BOWSER_simulation
-    RUN_SIMULATION = False
+    RUN_SIMULATION = False # change to Ture for running simulation or False for not
 except:
     RUN_SIMULATION = False
     
 
 threat_coordinates = {}
 
+# import files
 masterTemplate =  "dataFiles/threat_location_original.csv"
 threatFileLocation = "dataFiles/threat_location.csv"
 weaponFileOriginal = "dataFiles/weapon_data_original.csv"
@@ -33,13 +34,16 @@ historyFile = "dataFiles/history.csv"
 
 shutil.copyfile(weaponFileOriginal, weaponFileLocation)
 
+# set GUI theme
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
+# inital main window
 root = ctk.CTk()
 root.title('B.O.W.S.E.R.')
 root.geometry('1250x750')
 
+# write name and leaker percentage to history file
 def write_history(history_file,list):
     fieldnames = ['algorithm_name', 'leaker_percentage']
     new_list = {'algorithm_name': list[0], 'leaker_percentage': list[1]}
@@ -48,7 +52,7 @@ def write_history(history_file,list):
         writer.writerow(new_list)
         file.close()
 
-# sort by leaker percentage
+# read history file and sort by leaker percentage
 def read_history(history_file):
     sortedList = pd.read_csv(history_file)
     sortedList.sort_values(sortedList.columns[1],axis=0,inplace=True)
@@ -61,9 +65,11 @@ def count_threats(threat_file):
         threats = list(reader)
         return len(threats)
 
+# all thing that happen after hit the start button
 def submit():
     outputLabel.configure(text="")
 
+# get values from the inputs
     try:
         rangemin = int(rminEntry.get())
         rangemax = int(rmaxEntry.get())
@@ -87,68 +93,22 @@ def submit():
         pass
     algorithm = algoDropdown.get()
     num_threats = int(threatScale.get())
-    
+
+# run simulation with or without gazebo    
     if RUN_SIMULATION:
         simulation_leaker_percentage, algorithm_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats)
     else:
         simulation_leaker_percentage, algorithm_leaker_percentage = simulate_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=num_threats, threatCoordinates=threat_coordinates)
-        
-    
 
-    # columns = ['name', 'x', 'y', 'z', 'min_range', 'speed', 'type']
-    # df = pd.read_csv(masterTemplate, header=None, names=columns)
-    # limited_df = df.sample(num_threats)
-    # limited_df['min_range'] = [random.choice(range(rangemin, rangemax+1, 10)) for _ in range(num_threats)]
-
-    # if 'xMin' in globals() and 'xMax' in globals():
-    #     limited_df['x'] = [random.uniform(xMin, xMax) for _ in range(num_threats)]
-    # if 'yMin' in globals() and 'yMax' in globals():
-    #     limited_df['y'] = [random.uniform(yMin, yMax) for _ in range(num_threats)]
-    # if 'zMin' in globals() and 'zMax' in globals():
-    #     limited_df['z'] = [random.uniform(zMin, zMax) for _ in range(num_threats)]
-
-    # limited_df.to_csv(threatFileLocation, index=False, header=False)
-
-    # time.sleep(3)
-    # if algorithm == "DQN":
-    #     current_num_threats = count_threats(threatFileLocation)
-    #     runDQN(savePath=dqnModelPath, train=True, num_threats=current_num_threats)
-    #     time.sleep(3)
-    #     response, leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
-    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage:.2f}%")
-    #     #dleaker.configure(text=f"Deep Q-Learning: \n{leaker_percentage:.2f}%")
-    #     print(response
-    # elif algorithm == "Genetic Algorithm":
-    #     response, leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-    #     leaker_percentage = (1.00 - leaker_percentage) * 100
-    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-    #     #gleaker.configure(text=f"Genetic Algorithm: \n{leaker_percentage:.2f}%")
-
-    # elif algorithm == "Munkres":
-    #     response,leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
-    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-    #     #mleaker.configure(text=f"Munkres Algorithm: \n{leaker_percentage:.2f}%")
-    #     print(response)
-
-    # elif algorithm == "Simulated Annealing":
-    #     response,leaker_percentage = runSimulatedAnnealing()
-    #     leaker_percentage = leaker_percentage * 100
-    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-    #     #sleaker.configure(text=f"Simulated Annealing: \n{leaker_percentage:.2f}%")
-    #     print(response)
-    
-    # elif algorithm == "ACO":
-    #     response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
-    #     leaker_percentage = (1.00 - leaker_percentage) * 100
-    #     outputLabel.configure(text=f"Leaker Percentage: {leaker_percentage}%")
-    #     print(response)
-    
+# call write and read history function        
     save_list = [algorithm,simulation_leaker_percentage]
     write_history(historyFile,save_list)
     savedList = read_history(historyFile)
-    
+
+# update leaderboard
     leaderBoard.configure(text="\n".join(savedList.split('\n')[:10]))
 
+# result window
     rwin = ctk.CTk()
     rwin.title('Your Result')
     rwin.geometry('700x500')
@@ -156,45 +116,38 @@ def submit():
     algorithm_num_leakers = int(num_threats * algorithm_leaker_percentage * 0.01)
     simulation_num_leakers = int(num_threats * simulation_leaker_percentage * 0.01)
     
-
     rTitle = ctk.CTkLabel(rwin,text=algorithm,font=("Rockwell Extra Bold",50))
     rTitle.pack(pady=40)
 
+# number of threat
     rTheatsLabel = ctk.CTkLabel(rwin,text="Threats",font=("Helvetica",20))
     rTheatsLabel.pack(pady=5)
     rTheats = ctk.CTkLabel(rwin,text=num_threats,font=("Helvetica",15), bg_color= "red")
     rTheats.pack(pady=20)
 
+# number of leaker
     rleakersLabel = ctk.CTkLabel(rwin,text="Leakers",font=("Helvetica",20))
     rleakersLabel.pack(pady=5)
     rleakersLabel = ctk.CTkLabel(rwin,text=algorithm_num_leakers,font=("Helvetica",15), bg_color= "red")
     rleakersLabel.pack(pady=20)
 
+# leaker percentage from simulation
     rActualLeakageLabel = ctk.CTkLabel(rwin,text="Actual Leakage",font=("Helvetica",20))
     rActualLeakageLabel.pack(side="left", padx=5)
     rActualLeakage = ctk.CTkLabel(rwin,text=f"{simulation_leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
     rActualLeakage.pack(side="left", padx=20)
 
+# leaker percentage from algorithm
     rPredictedLeakageLabel = ctk.CTkLabel(rwin,text="Predicted Leakage",font=("Helvetica",20))
     rPredictedLeakageLabel.pack(side="right", padx=5)
     rPredictedLeakage = ctk.CTkLabel(rwin,text=f"{algorithm_leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
     rPredictedLeakage.pack(side="right", padx=20)
 
-    # rleakerPercentageLabel = ctk.CTkLabel(rwin,text="Leaker percentage",font=("Helvetica",20))
-    # rleakerPercentageLabel.pack(pady=5)
-    # rleakerPercentageLabel = ctk.CTkLabel(rwin,text=f"{leaker_percentage}%",font=("Helvetica",15), bg_color= "red")
-    # rleakerPercentageLabel.pack(pady=20)
-
     rwin.mainloop()
 
+# show update of input
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
-
-#def minSlider(value):
-#    minLabel.configure(text=f"Min: {int(value)}")
-
-#def maxSlider(value):
-#    maxLabel.configure(text=f"Max: {int(value)}")
 
 def angleSlider(value):
     angleLabel.configure(text=f"Angle: {int(value)} degree")
@@ -202,19 +155,19 @@ def angleSlider(value):
 def directionSlider(value):
     dirLabel.configure(text=f"Direction: {int(value)} degree")
 
+# for inital leaderboard
 savedList = read_history(historyFile)
 
+# BOWSER logo
 logo = ctk.CTkImage(light_image=Image.open('BOWSER_LOGO_FINAL.png'),size=(150,150))
 logoLabel = ctk.CTkLabel(root, text="", image = logo).place(x=10,y=10)
 
-#yrh = ctk.CTkImage(light_image=Image.open('BOWSER LOGO FINAL.png'),size=(40,40))
-#yrhImg = ctk.CTkLabel(root, text="", image = yrh).place(x=350,y=180)
-#yrhLabel = ctk.CTkLabel(root,text="You are here",font=("Helvetica",10),height=10).place(x=343,y=220)
-
+# BOWSER title
 title = ctk.CTkLabel(root,text="B.O.W.S.E.R.",font=("Rockwell Extra Bold",50))
 title.pack(pady=40)
-title.place(x=225,y=25)
+title.place(x=425,y=25)
 
+# inital radar screen
 canvas = tk.Canvas(root, width=500, height=500, borderwidth=0, highlightthickness=0,bg="black")
 canvas.pack(pady=20)
 canvas.place(x=720,y=200)
@@ -225,23 +178,26 @@ tk.Canvas.create_circle = _create_circle
 
 canvas.create_circle(250, 250, 10, fill="#BBB", outline="")
 
-
+# update radar screen
 def showRange(event):
     canvas = tk.Canvas(root, width=500, height=500, borderwidth=0, highlightthickness=0,
                     bg="black")
     canvas.pack(pady=20)
     canvas.place(x=720,y=200)
 
+# get values
     rangemin = int(rminEntry.get())
     rangemax = int(rmaxEntry.get())
     angle = int(angleEntry.get())
     direction = int(dirSlider.get())
     unit = unitDropdown.get()
 
+# define radar angle and direction
     startAngle = direction - (angle/2)
     endAngle = direction + (angle/2)
     rSize = 10
 
+# change scale of radar screen by rangemax
     if rangemax > 900:
         rangemax /= 9
         rangemin /= 9
@@ -255,6 +211,7 @@ def showRange(event):
     else:
         unitLabel.configure(text=f"|________| 50 {unit}")
 
+# create radar circles
     def _create_circle(self, x, y, r, **kwargs):
         return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
     tk.Canvas.create_circle = _create_circle
@@ -269,16 +226,18 @@ def showRange(event):
     canvas.create_circle_arc(250, 250, rangemin, fill="red", outline="", start=startAngle, end=endAngle)
     canvas.create_circle(250, 250, rSize, fill="#BBB", outline="")
 
+# new window for more feature button
 def openNewWindow():
     mwin = ctk.CTk()
     mwin.title('More Features')
-    mwin.geometry('800x600')
+    mwin.geometry('1200x700')
     ctk.CTkLabel(mwin, text="Spawn Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
 
     # rangemin = float(rminEntry.get())
     # rangemax = float(rmaxEntry.get())
     global threat_coordinates
 
+# read and save threat coordinates
     def saveThreatCoordinates():
         global threat_coordinates
         updated_threat_coordinates = {}
@@ -328,6 +287,7 @@ def openNewWindow():
     ctk.CTkLabel(mwin, text="Set Weapon Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
     weapon_coordinates = {}
 
+# read and save weapon coordinates
     def saveWeaponCoordinates():
         with open(weaponFileLocation, 'r') as file:
             lines = file.readlines()
@@ -363,9 +323,10 @@ def openNewWindow():
 
     mwin.mainloop()
 
-rLabel = ctk.CTkLabel(root, text="Spawn Range")
+# spawn range input section
+rLabel = ctk.CTkLabel(root, text="Spawn Range", font=("Helvetica", 20, "bold"))
 rLabel.pack(pady=5)
-rLabel.place(x=350,y=150)
+rLabel.place(x=325,y=150)
 
 rminEntry = ctk.CTkEntry(root, placeholder_text="Min")
 rminEntry.pack(pady=10)
@@ -377,6 +338,7 @@ rmaxEntry.pack(pady=10)
 rmaxEntry.place(x=320,y=230)
 rmaxEntry.bind("<KeyRelease>",showRange)
 
+# the circle will overlap itself and disappear for angle equal 360
 angleEntry = ctk.CTkSlider(root, from_=1, to=359, command=angleSlider)
 angleEntry.pack(pady=2)
 angleEntry.set(1)
@@ -397,11 +359,13 @@ dirLabel = ctk.CTkLabel(root, text=f"Direction: {dirSlider.get()} degree")
 dirLabel.pack(pady=2)
 dirLabel.place(x=345,y=340)
 
-#rangeButton = ctk.CTkButton(root, text="View Range", command=showRange)
-#rangeButton.pack(pady=5)
-#rangeButton.place(x=320,y=325)
+unitOptions = ["m", "km", "ft", "mi"]
+unitDropdown = ctk.CTkOptionMenu(root, values=unitOptions,width=60)
+unitDropdown.pack(pady=10)
+unitDropdown.place(x=480,y=210)
 
-radarLabel = ctk.CTkLabel(root, text="Visualize Spawn Range")
+# radar labels section
+radarLabel = ctk.CTkLabel(root, text="Visualize Spawn Range", font=("Helvetica", 20, "bold"))
 radarLabel.pack(pady=5)
 radarLabel.place(x=720,y=150)
 
@@ -413,25 +377,10 @@ scaleLabel = ctk.CTkLabel(root, text="|________|________|________|________|")
 scaleLabel.pack(pady=5)
 scaleLabel.place(x=721, y=700)
 
-#minVar = tk.IntVar(value=1)
-#rminEntry = ctk.CTkSlider(root, from_=10, to=50, variable=minVar,command=minSlider,progress_color="red")
-#rminEntry.pack(pady=2)
-#minLabel = ctk.CTkLabel(root, text=f"Min: {rminEntry.get()}")
-#minLabel.place(x=600,y=170)
-#maxVar = tk.IntVar(value=1)
-#rmaxEntry = ctk.CTkSlider(root, from_=10, to=50, variable=maxVar,command=maxSlider,fg_color="red")
-#rmaxEntry.pack(pady=10)
-#maxLabel = ctk.CTkLabel(root, text=f"Max: {rmaxEntry.get()}")
-#maxLabel.place(x=600,y=200)
-
-unitOptions = ["m", "km", "ft", "mi"]
-unitDropdown = ctk.CTkOptionMenu(root, values=unitOptions,width=60)
-unitDropdown.pack(pady=10)
-unitDropdown.place(x=480,y=210)
-
-algoLabel = ctk.CTkLabel(root, text="Select Algorithm")
+# algorithm and threat input section
+algoLabel = ctk.CTkLabel(root, text="Select Algorithm", font=("Helvetica", 20, "bold"))
 algoLabel.pack(pady=5)
-algoLabel.place(x=345,y=380)
+algoLabel.place(x=313,y=380)
 algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "ACO"]
 algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
@@ -445,11 +394,13 @@ currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threa
 currentThreatLabel.pack(pady=5)
 currentThreatLabel.place(x=310,y=470)
 
+# threat and weapon coordinates input section
 moreFeaturesButton = ctk.CTkButton(root, text="More Features", command=openNewWindow)
 moreFeaturesButton.pack(pady=5)
 moreFeaturesButton.place(x=320,y=510)
 
-submitButton = ctk.CTkButton(root, text="Start", command=submit)
+# start button
+submitButton = ctk.CTkButton(root, text="Start", font=("Helvetica", 20, "bold"), text_color="red", command=submit)
 submitButton.pack(pady=5)
 submitButton.place(x=320,y=550)
 
@@ -457,22 +408,7 @@ outputLabel = ctk.CTkLabel(root, text="", wraplength=800)
 outputLabel.pack(pady=10)
 outputLabel.place(x=320,y=700)
 
-#dleaker = ctk.CTkLabel(root, text="Deep Q-Learning: No Tracked Runs in Current Session", wraplength=200)
-#dleaker.pack(side="right")
-#dleaker.place(x=800,y=150)
-
-#gleaker = ctk.CTkLabel(root, text="Genetic Algorithm: No Tracked Runs in Current Session", wraplength=200)
-#gleaker.pack(side="right")
-#gleaker.place(x=800,y=190)
-
-#mleaker = ctk.CTkLabel(root, text="Munkres Algorithm: No Tracked Runs in Current Session", wraplength=200)
-#mleaker.pack(side="right")
-#mleaker.place(x=800,y=230)
-
-#sleaker = ctk.CTkLabel(root, text="Simulated Annealing: No Tracked Runs in Current Session", wraplength=200)
-#sleaker.pack(side="right")
-#sleaker.place(x=800,y=270)
-
+# display leaderboard
 leaderBoard = ctk.CTkLabel(root, text="\n".join(savedList.split('\n')[:10]), anchor="e", justify=RIGHT, wraplength=400)
 leaderBoard.pack(side="left")
 leaderBoard.place(x=50,y=210)
