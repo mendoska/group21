@@ -275,8 +275,8 @@ def openNewWindow():
     mwin.geometry('800x600')
     ctk.CTkLabel(mwin, text="Spawn Coordinates", font=("Helvetica", 20, "bold")).pack(pady=10)
 
-    rangemin = float(rminEntry.get())
-    rangemax = float(rmaxEntry.get())
+    # rangemin = float(rminEntry.get())
+    # rangemax = float(rmaxEntry.get())
     global threat_coordinates
 
     def saveThreatCoordinates():
@@ -286,13 +286,15 @@ def openNewWindow():
             x = float(threat_coordinates[f"threat_{i}_x"].get())
             y = float(threat_coordinates[f"threat_{i}_y"].get())
             z = float(threat_coordinates[f"threat_{i}_z"].get())
-            if rangemin <= abs(x) <= rangemax and rangemin <= abs(y) <= rangemax and 0 <= z:
+            min_range = float(threat_coordinates[f"threat_{i}_min_range"].get())  
+            max_range = float(threat_coordinates[f"threat_{i}_max_range"].get())
+            if min_range <= abs(x) <= max_range and min_range <= abs(y) <= max_range and 0 <= abs(z):
                 print(f"Threat {i}: x={x}, y={y}, z={z}")
-                updated_threat_coordinates[i] = {"x": x, "y": y, "z": z}
+                updated_threat_coordinates[i] = {"x": x, "y": y, "z": z, "min_range": min_range, "max_range": max_range}
             else:
                 print(f"Coordinates for Threat {i} are not within the range.")
         threat_coordinates = updated_threat_coordinates
-        # print(threat_coordinates)
+        print(threat_coordinates)
 
     # Current bug where the sliders position affects the threat count by one. 
     # Just move it slightly to the left wihtout changing the number and itll work.
@@ -312,6 +314,14 @@ def openNewWindow():
         tk.Label(frame, text="z:").pack(side=tk.LEFT)
         threat_coordinates[f"threat_{i}_z"] = tk.Entry(frame)
         threat_coordinates[f"threat_{i}_z"].pack(side=tk.LEFT, pady=2)
+
+        tk.Label(frame, text="Min Range:").pack(side=tk.LEFT)  
+        threat_coordinates[f"threat_{i}_min_range"] = tk.Entry(frame) 
+        threat_coordinates[f"threat_{i}_min_range"].pack(side=tk.LEFT, pady=2)
+
+        tk.Label(frame, text="Max Range:").pack(side=tk.LEFT)  
+        threat_coordinates[f"threat_{i}_max_range"] = tk.Entry(frame)
+        threat_coordinates[f"threat_{i}_max_range"].pack(side=tk.LEFT, pady=2)
 
     tk.Button(mwin, text="Save Threat Coordinates", command=saveThreatCoordinates).pack(pady=10)
 
