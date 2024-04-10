@@ -25,39 +25,9 @@ file_lock = Lock()
 # Define a condition variable
 file_condition = Condition(file_lock)
 
-def writeDictToCSV(dictionary, csv_filename):
-    """
-    Write a Python dictionary to a CSV file.
 
-    Parameters:
-        dictionary (dict): The dictionary to be written to the CSV file.
-        csv_filename (str): The name of the CSV file.
-
-    Returns:
-        None
-    """
-    with open(csv_filename, 'w', newline='') as csvfile:
-        fieldnames = ['droneID', 'x', 'y', 'z', 'minRange', 'Speed', 'Type' ]
-        writer = DictWriter(csvfile, fieldnames=fieldnames)
-
-        # Write the header
-        # writer.writeheader()
-
-        # Write each key-value pair as a separate row
-        for key, values in dictionary.items():
-            writer.writerow({'droneID': key, 'x': values.get('x', ''), 'y': values.get('y', ''), 'z': values.get('z', ''), 
-                             'minRange':values.get('minRange',''), 'Speed': 1, 'Type': 'A'})
-
-    """
-    
-    Loads Defense Weaponry from File into a list of Weapon objects, allowing for simple handling
-    Intended for multiple placements throughout the area in future
-    
-    """
-
-
-def initializeWeaponsFromFile(threat_file)-> list:
-    with open(threat_file, 'r') as file:
+def initializeWeaponsFromFile(weapon_file:str)-> list:
+    with open(weapon_file, 'r') as file:
         weapons = []
         readerObj = reader(file)
         for weaponID, threatEntry in enumerate(list(readerObj)):
@@ -157,41 +127,26 @@ waits until robot/drone has reached (0,0) +/- 0.5m and then increments the leake
 """
 def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRange:set, locationDict:dict, spawnParams:set) -> None:
     global START_COUNTER, LEAKER_COUNT
-    
-    """ polar to cartesian conversion from ChatGPT, just didnt want to do math """
-    if spawnRange[0] > spawnRange[1]:
-        raise ValueError("Minimum radius cannot be greater than maximum radius")
-    
-    # Generate random angle within 0 to 2*pi
-    angle = uniform(0, 2 * pi)
-    # Generate random radius within the range [min_radius, max_radius]
-    radius = uniform(spawnRange[0], spawnRange[1])
-    # Calculate x and y coordinates using polar coordinates to Cartesian coordinates conversion
-    startingX = radius * cos(angle)
-    startingY = radius * sin(angle)
-    startingZ = 0
 
+    startingX = locationDict[droneID]["x"]
+    startingY = locationDict[droneID]["y"]
+    startingZ = locationDict[droneID]["z"]
+    speed = locationDict[droneID]["Speed"]
+    leakerRange = locationDict[droneID]["minRange"]
 
     with file_lock:
-        print(f"Spawning Drone at ({startingX},{startingY},{startingZ}), Speed: {spawnParams[0]}, Leaker Range: {spawnParams[1]}")
-        alterD2OSpawnParameters(s=spawnParams[0], lr=spawnParams[1], droneID=droneID)
+        print(f"Spawning Drone at ({startingX},{startingY},{startingZ}), Speed: {speed}, Leaker Range: {leakerRange}")
+        alterD2OSpawnParameters(s=speed, lr=leakerRange, droneID=droneID)
 
         # calls the function which creates and returns a subprocess object which executes the "add_robots_to_simulation" command
         droneSubprocess = addDroneToSimulation(droneID=droneID, spawnCoordinateX=startingX, spawnCoordinateY=startingY)
         # waitForLineInSubprocess(subprocess=droneSubprocess, targetStr=f"Leaker Range is: {spawnParams[1]}", option=1)
         # once the subprocess is successfully created, the global counter is incremented and the drone's information is stored
-        locationDict[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange": spawnRange[0]}    
+        # locationDict[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange": spawnRange[0]}    
         waitForLineInSubprocess(subprocess=droneSubprocess, targetStr="[INFO] [add_bot_node-1]: process has finished cleanly [pid", option=0)
         file_condition.notify_all()
     START_COUNTER += 1
         
-        
-    # Starting Location  = [x,y,z]
-    tempDrone = Drone(droneID=droneID, 
-                      currentStatus= "Alive",
-                      startingLocation=[startingX,startingY,startingZ],
-                      currentLocation=[startingX,startingY,startingZ])
-    droneDirectory[droneID] = tempDrone
     subprocesses[f"robot_{droneID}"] = droneSubprocess
     
     # wait for signal that drone has reached the origin, then begin the process of deleting robot (Checks twice because false flags have appeared)
@@ -214,35 +169,30 @@ def droneController(droneID:int, droneDirectory:dict, subprocesses:dict, spawnRa
     
     
 
-def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:int) -> tuple:
+def run_BOWSER_simulation(numberOfDrones:int, algoResponse:list, droneDirectory:dict, locationDirectory:dict) -> tuple:
     global SYSTEM_RUNNING
     
-    threatFileLocation = "dataFiles/simulationDroneLocations.csv"
     weaponFileLocation = "dataFiles/weapon_data.csv"
-    dqnModelPath = "dataFiles/trained_model.zip"
     
+    subprocesses = {}
     
-    droneDirectory, locationDirectory, subprocesses = {}, {}, {}
-    
-
 
     print("                                Welcome to the BOWSER Prototype ---- DEMO ---- ")
    
     print(f"You have selected {numberOfDrones} Drones")
-    ic(algorithmChoice)
     
     ic("Start Empty Gazebo World")
     worldCreationProcess = startEmptyGazeboWorldSimulation(totalNumberOfDrones=2)
     waitForLineInSubprocess(subprocess=worldCreationProcess, targetStr="[INFO] [ground_truth_publisher-2]: process started with pid", option=1)
     ic("World Created")    
-    weaponList = initializeWeaponsFromFile(threat_file=threatFileLocation)
+    weaponList = initializeWeaponsFromFile(weapon_file=weaponFileLocation)
     SYSTEM_RUNNING = True
     
     print(f"Spawn in {numberOfDrones} Drones")
     threads = []
     for x in range(numberOfDrones):
         # Create a thread for each drone
-        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, spawnRange, locationDirectory, (1.0, 0.5 )))
+        thread = Thread(target=droneController, args=(x,droneDirectory, subprocesses, locationDirectory))
         thread.start()
         threads.append(thread)
     # Once each drone thread has been created, A final "timer" thread is started which monitors the number of threads that have been executed
@@ -257,53 +207,50 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
         continue
     
     
-    """Write Drone Locations into CSV for Algorithms"""
+    # """Write Drone Locations into CSV for Algorithms"""
     
-    writeDictToCSV(locationDirectory,threatFileLocation)
+    # writeDictToCSV(locationDirectory,threatFileLocation)
     
-    "" "Call Algorithm """    
-    start = time()
-    if algorithmChoice == "DQN":
-        from algorithms.dqn_agent import runDQN
-        runDQN(savePath=dqnModelPath, train=True, num_threats=numberOfDrones)
-        sleep(3)
-        response, algorithm_leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
-    elif algorithmChoice == "Genetic Algorithm":
-        from algorithms.geneticAlgorithmTest import runGA
-        response, algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
-        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
+    # "" "Call Algorithm """    
+    # start = time()
+    # if algorithmChoice == "DQN":
+    #     from algorithms.dqn_agent import runDQN
+    #     runDQN(savePath=dqnModelPath, train=True, num_threats=numberOfDrones)
+    #     sleep(3)
+    #     response, algorithm_leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
+    # elif algorithmChoice == "Genetic Algorithm":
+    #     from algorithms.geneticAlgorithmTest import runGA
+    #     response, algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+    #     algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
 
-    elif algorithmChoice == "Munkres":
-        from algorithms.munkres_algorithm import runMunkres
-        response, algorithm_leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+    # elif algorithmChoice == "Munkres":
+    #     from algorithms.munkres_algorithm import runMunkres
+    #     response, algorithm_leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
 
-    elif algorithmChoice == "Simulated Annealing":
-        from algorithms.simulated_annealing import runSimulatedAnnealing
-        response, algorithm_leaker_percentage = runSimulatedAnnealing()
-        leaker_percealgorithm_leaker_percentagenalgorithm_leaker_percentagetage *= 100
+    # elif algorithmChoice == "Simulated Annealing":
+    #     from algorithms.simulated_annealing import runSimulatedAnnealing
+    #     response, algorithm_leaker_percentage = runSimulatedAnnealing()
+    #     leaker_percealgorithm_leaker_percentagenalgorithm_leaker_percentagetage *= 100
     
-    elif algorithmChoice == "ACO":
-        from algorithms.ACO import runACO
-        response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
-        leaker_percentage = (1.00 - leaker_percentage) * 100
+    # elif algorithmChoice == "ACO":
+    #     from algorithms.ACO import runACO
+    #     response,leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+    #     leaker_percentage = (1.00 - leaker_percentage) * 100
     
-    else:
-        raise "Invalid Algorithm Choice"
-    end = time()
+    # else:
+    #     raise "Invalid Algorithm Choice"
+    # end = time()
     
     """Handle Drones in Simulation According to Algorithm Results"""
     ic(droneDirectory)
     ic(subprocesses)
-    
-    print(f"Waiting {(end-start)} seconds to offset Sim Time to Real Time difference")
-    sleep(end-start)
     
     """
     Assigning Targets to defense weaponry, right now assuming there are 1 of each weapon system, all located at (0,0)
     """
     # [[short range targets],[medium Range Targets], [Long Range Targets], [Directed Energy Targets]] 
     targetDelegations = [[],[],[],[]]
-    for target in response:
+    for target in algoResponse:
         # if assigned weapon is short range, add to the short range targets 
         if target[1] == weaponList[0].weaponName:
             targetDelegations[0].append(int(target[0])) 
@@ -346,9 +293,9 @@ def run_BOWSER_simulation(spawnRange:set, algorithmChoice:str, numberOfDrones:in
     ic("No more Subprocesses, all robots should be dead")
 
     simulation_leaker_percent = (LEAKER_COUNT / numberOfDrones) * 100 
-    ic(simulation_leaker_percent, algorithm_leaker_percentage)
+    ic(simulation_leaker_percent)
 
-    return simulation_leaker_percent, algorithm_leaker_percentage
+    return simulation_leaker_percent
 
 
 

@@ -186,16 +186,16 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
     env = BattleEnv(weapon_lst, use_testing_data(threat_file_path) if use_actual_data else threat_lst)
 
     # Define hyperparameters
-    policy_kwargs = dict(net_arch=[128, 128, 128])  # Specify NN architecture for agent: MLP with 3 hidden layers of 128 neurons
-    learning_rate = 0.01  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
-    learning_starts = 100 # Define number of initial steps to take in environment before training
+    policy_kwargs = dict(net_arch=[256, 256, 256, 256])  # Specify NN architecture for agent: MLP with 4 hidden layers of 256 neurons
+    learning_rate = 0.005  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
+    learning_starts = 500 # Define number of initial steps to take in environment before training
     # initial_exploration_fraction = 1.0  # Start with full exploration
     # exploration_decay = 0.99  # Decay rate for exploration fraction per episode
-    exploration_fraction = 0.5 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
+    exploration_fraction = 0.8 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
 
-    batch_size = 64
-    buffer_size = 10000
-    target_update_interval = 500
+    batch_size = 128
+    buffer_size = 50000
+    target_update_interval = 1000
 
     # Load pre-trained model if load_path provided
     if load_path is not None:
@@ -222,14 +222,15 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
 
         # Keep going until all threats have been assigned weapons
         while not done:
+        
             # Choose action greedily (exploitation) or randomly (exploration) based on exploration_fraction
             action, _ = model.predict(obs, deterministic=np.random.rand() > exploration_fraction)
 
             # Print weapon assignments for current threat
             current_threat = env.threats[env.current_threat].get_name()
             assigned_weapons = [env.weapons[i] for i in range(env.num_weapons) if action & (1 << i)]
-            print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
             if test:
+                print(f"Threat: {current_threat}, Assigned Weapons: {[weapon.get_name() for weapon in assigned_weapons]}")
                 response.append([current_threat, [weapon.get_name() for weapon in assigned_weapons]])
             # Identify leakers
             combined_pk = sum([weapon.get_pk()["bomber"] for weapon in assigned_weapons])
@@ -290,6 +291,7 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
     else:
         threat_data = use_testing_data(threatFilePath)
         response, leaker_percentage = train_dqn_agent(test_weapons, threat_data, num_episodes=1, save_path=savePath, load_path=loadPath, use_actual_data=True, test=True, threat_file_path=threatFilePath)
+        # Ensure a weapon is assigned to every threat
         for i, weapon_assigned in enumerate(response[0][1]):
             if weapon_assigned == -1:  # If any threat is unassigned, assign a random weapon
                 response[0][1][i] = random.choice(test_weapons).get_name()
@@ -299,5 +301,4 @@ def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, nu
 # trained_model, rewards = train_dqn_agent(test_weapons, make_training_data(),
 #                                          num_episodes=100, save_path="../dataFiles/trained_model.zip")
 
-# runDQN(savePath="dataFiles/trained_model.zip", train=True, num_threats=50)
-# runDQN(loadPath="dataFiles/trained_model.zip", train=False, threatFilePath="dataFiles/threat_locations.csv")
+# runDQN(savePath="python/dataFiles/trained_model.zip", train=True)
