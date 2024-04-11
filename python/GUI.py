@@ -200,7 +200,7 @@ def submit():
 
 # Run simulation with or without gazebo    
     if RUN_SIMULATION:
-        simulation_leaker_percentage = run_BOWSER_simulation(spawnRange=(rangemin, rangemax), algorithmChoice=algorithm, numberOfDrones=numThreats)
+        simulation_leaker_percentage = run_BOWSER_simulation(numberOfDrones=numThreats, algoResponse=response, droneDirectory=drone_directory, locationDirectory=location_directory)
     else:
         simulation_leaker_percentage = simulate_BOWSER_simulation(numberOfDrones=numThreats, algoResponse=response, droneDirectory=drone_directory, locationDirectory=location_directory)
 
