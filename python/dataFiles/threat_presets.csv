@@ -1,4 +1,4 @@
-bomber,90000,200,A
-slow missile,100,225,A
-fast missile,500,2250,A
-fighter,50000,270,A
+bomber,10,200,A
+slow missile,1,225,A
+fast missile,1,1000,A
+fighter,30,270,A

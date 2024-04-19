@@ -31,7 +31,7 @@ threat_coordinates = {}
 
 # Import files
 masterTemplate =  "dataFiles/threat_location_original.csv"
-threatFileLocation = "dataFiles/simulationDroneLocations.csv"
+threatFileLocation = "dataFiles/simulationThreatLocations.csv"
 weaponFileOriginal = "dataFiles/weapon_data_original.csv"
 weaponFileLocation = "dataFiles/weapon_data.csv"
 historyFile = "dataFiles/history.csv"
@@ -154,7 +154,7 @@ def submit():
     algorithm = algoDropdown.get()
     numThreats = int(threatScale.get())
 
-    drone_directory, location_directory = {}, {}
+    threat_directory, location_directory = {}, {}
     if numThreats != len(threat_coordinates):  
         """ If there are threats without pre-selected types, initialize the preset list to chose randomly """
         threatPresetsDict = readThreatPresets()
@@ -190,14 +190,15 @@ def submit():
         speedValue =  chosenThreat["speed"]
         # Starting Location  = [x,y,z]
         ic(startingX ,startingY)
-        location_directory[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange":leakerRange, "Speed":speedValue }    
-        tempDrone = Threat(droneID=droneID, 
+        location_directory[droneID] = {"x":startingX,"y":startingY,"z":startingZ }    
+        tempDrone = Threat(threatID=droneID, 
                     currentStatus= "Alive",
                     startingLocation=[startingX,startingY,startingZ],
-                    currentLocation=[startingX,startingY,startingZ])
-        drone_directory[droneID] = tempDrone    
+                    leakerRange=leakerRange,
+                    speed=speedValue)
+        threat_directory[droneID] = tempDrone    
         
-    ic(drone_directory, location_directory)
+    ic(threat_directory)
     
     """Write Drone Locations into CSV for Algorithms"""
     writeDroneDictToCSV(location_directory,threatFileLocation)
@@ -205,9 +206,9 @@ def submit():
 
 # Run simulation with or without gazebo    
     if RUN_SIMULATION:
-        algorithm_leaker_percentage, simulation_leaker_percentage = run_BOWSER_simulation(algorithm=algorithm, droneDirectory=drone_directory, locationDirectory=location_directory)
+        algorithm_leaker_percentage, simulation_leaker_percentage = run_BOWSER_simulation(algorithm=algorithm, threatDirectory=threat_directory)
     else:
-        algorithm_leaker_percentage, simulation_leaker_percentage = simulate_BOWSER_simulation(algorithm=algorithm, droneDirectory=drone_directory, locationDirectory=location_directory)
+        algorithm_leaker_percentage, simulation_leaker_percentage = simulate_BOWSER_simulation(algorithm=algorithm, threatDirectory=threat_directory)
 
 # Call write and read history function        
     save_list = [algorithm,simulation_leaker_percentage]

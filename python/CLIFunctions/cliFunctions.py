@@ -2,6 +2,7 @@ import subprocess
 from icecream import ic
 from random import random
 from math import atan2, pi
+from shlex import split
 
 def runAsyncCommand(command:str) -> str:
     try:
@@ -13,7 +14,7 @@ def runAsyncCommand(command:str) -> str:
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-            executable='/bin/zsh'  # Specify the Zsh executable
+            executable='/bin/bash'  # Specify the Zsh executable
         )
         ic("Process Started")
         return process
@@ -44,7 +45,7 @@ def runSyncCommand(command:str) -> str:
             stderr=subprocess.PIPE,
             text=True,
             shell=True,
-            executable='/bin/zsh'  # Specify the Zsh executable
+            executable='/bin/bash'  # Specify the Zsh executable
         )
 
         # Check if the command was successful
@@ -56,7 +57,7 @@ def runSyncCommand(command:str) -> str:
             raise subprocess.CalledProcessError(result.returncode, result.stderr)
     except subprocess.TimeoutExpired as e:
         ic(e)
-        ic("Drone Created and Process Killed")
+        ic("Threat Created and Process Killed")
         return 1
     except Exception as e:  
         # Handle exceptions, if any
@@ -65,12 +66,12 @@ def runSyncCommand(command:str) -> str:
 
 # add drone to simulation
 """ return created Location """
-def addDroneToSimulation(droneID:int, spawnCoordinateX:int, spawnCoordinateY:int) -> None:
+def addThreatToSimulation(threatID:int, spawnCoordinateX:int, spawnCoordinateY:int) -> None:
     yaw = atan2(spawnCoordinateY,spawnCoordinateX) + pi 
     addDroneCommand = f"""
                         source ../simulation/swarm_ws/ROS2swarm_B/install/setup.zsh &&
                         ROS_DOMAIN_ID=42 ros2 launch launch_gazebo add_robot.launch.py \
-                        start_index:={droneID} \
+                        start_index:={threatID} \
                         gazebo_world:=empty.world \
                         pattern:=drive2OriginPattern \
                         number_robots:=1 \
@@ -87,55 +88,11 @@ def addDroneToSimulation(droneID:int, spawnCoordinateX:int, spawnCoordinateY:int
                      """
 
     return runAsyncCommand(command=addDroneCommand)
-    # if runSyncCommand(command=addDroneCommand) == 1:
-    #     ic("Drone Created")
-    #     return 1
-    # else:
-    #     ic(f"Error While Adding Drone {droneID} To Simulation")
-    #     return 0
 
-""" return created Location """
-def add1DroneToSimulation(droneID:int) -> list:
-    # yaw = atan2(spawnCoordinateY,spawnCoordinateX) + pi 
-    addDroneCommand = f""" zsh ../simulation/swarm_ws/ROS2swarm_B/add_robots_to_simulation.sh
-                          """
-    if runSyncCommand(command=addDroneCommand) == 1:
-        ic("Drone Created")
-        return []
-    else:
-        ic(f"Error While Adding Drone {droneID} To Simulation")
-        return 0
 
-# ping location function
-""" returns location   NOT USED """
-# def getDroneLocation(droneID: int) -> dict:
-#     """
-#      Using the drone ID as a marker, We ping the drone's transform topic node, 
-#      taking the first 17 lines, which make up the first message, and transform it from 
-#      its yaml formatting into a dictionary using the yaml.safe_load() function.
-#      Then we path to the location which takes the form of a dictionary structured
-#      as such: {'x': x-coordiate, 'y': y-coordiate, 'z': z-coordiate}
-#      NOTE: Only the x and y coordinates are necessary for this prototype.
-     
-#     Returns:
-#         Dictionary: {'x': x-coordiate, 'y': y-coordiate, 'z': z-coordiate} of Drone
-#     """
-   
-#     locationCommand = f"ROS_DOMAIN_ID=42 ros2 topic echo /robot_{droneID}/tf | head -n 17"
-#     # if the command response is not none (which implies an error while calling the subprocess)
-#     # then the variable is set to command response 
-#     if (commandResponse:=runSyncCommand(command=locationCommand)) is not None:
-#         # the full yaml response is converted to a dictionary and passed into the locationDictionary
-#         locationDictionary = safe_load(commandResponse)
-#         ic(locationDictionary)
-#         # then the locationDicitonary is set to the specific transformation dictionary containing 
-#         # the x, y, and z coordiantes of the drone 
-#         locationDictionary = locationDictionary['transforms'][0]['transform']['translation']
-#         ic(locationDictionary)  
-#         return locationDictionary
-#     else:
-#         ic(f"Error While Echoing Robot {droneID}'s Transformation Topic")
-#         return 0
+
+
+
 
 
 def issueStartCommand() -> None:
@@ -146,7 +103,7 @@ def issueStartCommand() -> None:
 
 # remove drone from simulation
 """ return 'destroyed' location  """
-def destroyDrone(droneID: int) -> list:
+def destroyThreat(threatID: int) -> list:
     """
     set velocity = 0
     location
@@ -155,7 +112,7 @@ def destroyDrone(droneID: int) -> list:
 
     return [locationList, confirmation]
     """
-    delRobotModel = f"""ros2 service call /delete_entity gazebo_msgs/srv/DeleteEntity '{{name: "robot_{droneID}"}}' """
+    delRobotModel = f"""ros2 service call /delete_entity gazebo_msgs/srv/DeleteEntity '{{name: "robot_{threatID}"}}' """
     if (commandResponse:=runSyncCommand(command=delRobotModel)) is not None: 
         status_message = commandResponse.split("status_message")[1] # Isolates just the status message portion
         status_message = status_message[2:len(status_message)-2].replace("[","").replace("]","").replace("_"," ") # more formatting to make it prettier
@@ -207,6 +164,9 @@ def startEmptyGazeboWorldSimulation(totalNumberOfDrones:int) -> subprocess.Popen
     return runAsyncCommand(command=startWorldCommand)
 
     
- 
+def stopWorldSimulation() -> None:
+    pkill_ros_command = "pkill -f 'ros'"
+    subprocess.run(split(pkill_ros_command))
+    return
  
     
