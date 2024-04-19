@@ -156,9 +156,9 @@ def submit():
     
         location_directory[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange":leakerRange, "Speed":speedValue }    
         tempDrone = Drone(droneID=droneID, 
-                      currentStatus= "Alive",
-                      startingLocation=[startingX,startingY,startingZ],
-                      currentLocation=[startingX,startingY,startingZ])
+                    currentStatus= "Alive",
+                    startingLocation=[startingX,startingY,startingZ],
+                    currentLocation=[startingX,startingY,startingZ])
         drone_directory[droneID] = tempDrone    
     
     """Write Drone Locations into CSV for Algorithms"""
@@ -230,10 +230,19 @@ def submit():
     rTheats.pack(pady=20)
 
 # Number of leakers
-    rleakersLabel = ctk.CTkLabel(rwin,text="Leakers",font=("Helvetica",20))
-    rleakersLabel.pack(pady=5)
-    rleakersLabel = ctk.CTkLabel(rwin,text=algorithm_num_leakers,font=("Helvetica",15), bg_color= "red")
-    rleakersLabel.pack(pady=20)
+    pleakersLabel = ctk.CTkLabel(rwin,text="Predicted Leakers",font=("Helvetica",20))
+    pleakersLabel.pack(pady=5)
+    pleakersLabel.place(x=526, y=310)
+    pleakers = ctk.CTkLabel(rwin,text=algorithm_num_leakers,font=("Helvetica",15))
+    pleakers.pack(pady=20)
+    pleakers.place(x=490, y=310)
+
+    aleakersLabel = ctk.CTkLabel(rwin,text="Actual Leakers",font=("Helvetica",20))
+    aleakersLabel.pack(pady=5)
+    aleakersLabel.place(x=8, y=310)
+    aleakers = ctk.CTkLabel(rwin,text=simulation_num_leakers,font=("Helvetica",15))
+    aleakers.pack(pady=20)
+    aleakers.place(x=170, y=310)
 
 # Leaker percentage from simulation
     rActualLeakageLabel = ctk.CTkLabel(rwin,text="Actual Leakage",font=("Helvetica",20))
