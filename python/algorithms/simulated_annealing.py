@@ -1,7 +1,7 @@
 import copy
 import random
 import math
-
+from icecream import ic
 """
 simulated annealing is an algorithm modeled after the process of real annealing, like a metal. Particles move 
 faster when they have a higher temperature and slow down as the metal cools. Similarly, our algorithm will search more
@@ -53,7 +53,7 @@ def simulated_annealing(initial_state):
     output = print_results(function_inputs, solution)
     # print(solution)
     # print(leak_percent(solution))
-    return output, leak_percent(solution)
+    return output, 1 - leak_percent(solution)
 
 def leak_percent(state):
     success_count = 0
@@ -207,6 +207,7 @@ def runSimulatedAnnealing():
     for i in range(50):
         initial_solution.append(random.randint(1, 4))
     response, leaker_percentage = simulated_annealing(initial_solution)
+    ic(response, leaker_percentage)
     return response, leaker_percentage
 
 

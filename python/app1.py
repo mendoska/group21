@@ -1,4 +1,4 @@
-from Models.Drone import Drone
+from python.Models.Threat import Drone
 from Models.Weapon import Weapon
 from CLIFunctions.cliFunctions import addDroneToSimulation, issueStartCommand, startEmptyGazeboWorldSimulation, destroyDrone
 from random import randint, uniform

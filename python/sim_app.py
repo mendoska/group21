@@ -1,17 +1,19 @@
-from Models.Drone import Drone
+from Models.Threat import Threat
 from Models.Weapon import Weapon
-from random import randint, uniform
 from icecream import ic
 from threading import Thread
 from time import time, sleep
-from csv import DictWriter, reader
-from math import cos, sin, pi
-from yaml import safe_load, dump
-
+from csv import reader
 
 LEAKER_COUNT = 0
 
 
+"""
+    
+    Loads Defense Weaponry from File into a list of Weapon objects, allowing for simple handling
+    Intended for multiple placements throughout the area in future
+    
+"""
 def initializeWeaponsFromFile(weapon_file:str)-> list:
     with open(weapon_file, 'r') as file:
         weapons = []
@@ -44,19 +46,19 @@ def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, droneD
                 
             ic(f"{weaponModel.weaponName} has fired once at Drone {targetID}")
             weaponModel.ammunitionQuantity -= 1
-            # deletionAttempt = destroyDrone(droneID=targetID)
-            # if deletionAttempt.startswith("Successfully deleted entity"):
             targetThreat.currentStatus="Dead"
             
             ic(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
 
 
-def simulate_BOWSER_simulation(numberOfDrones:int, algoResponse:list, droneDirectory:dict, locationDirectory:dict) -> tuple:
+def simulate_BOWSER_simulation(algorithm:str, droneDirectory:dict, locationDirectory:dict) -> tuple:
     global SYSTEM_RUNNING
     
     weaponFileLocation = "dataFiles/weapon_data.csv"
+    dqnModelPath = "dataFiles/trained_model.zip"
+    threatFileLocation = "dataFiles/simulationDroneLocations.csv"
     
-    
+    numberOfDrones = len(droneDirectory)
     subprocesses = {}
     
 
@@ -71,6 +73,41 @@ def simulate_BOWSER_simulation(numberOfDrones:int, algoResponse:list, droneDirec
     
     print(f"Simulating {numberOfDrones} Drones")
 
+
+    """Call Algorithm """    
+    start = time()
+    if algorithm == "DQN":
+        from algorithms.dqn_agent import runDQN
+        runDQN(savePath=dqnModelPath, train=True, num_threats=numberOfDrones)
+        response, algorithm_leaker_percentage = runDQN(loadPath=dqnModelPath, train=False, threatFilePath=threatFileLocation)
+    
+    elif algorithm == "Genetic Algorithm":
+        from algorithms.geneticAlgorithmTest import runGA
+        response, algorithm_leaker_percentage = runGA(threatFileLocation=threatFileLocation)
+        algorithm_leaker_percentage *= 100
+
+    elif algorithm == "Munkres":
+        from algorithms.munkres_algorithm import runMunkres
+        response, algorithm_leaker_percentage = runMunkres(threatFileLocation=threatFileLocation, weaponFileLocation=weaponFileLocation)
+
+    elif algorithm == "Simulated Annealing":
+        from algorithms.simulated_annealing import runSimulatedAnnealing
+        response, algorithm_leaker_percentage = runSimulatedAnnealing()
+        algorithm_leaker_percentage *= 100
+    
+    elif algorithm == "ACO":
+        from algorithms.ACO import runACO
+        response, algorithm_leaker_percentage = runACO(threatFileLocation=threatFileLocation)
+        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
+    
+    else:
+        raise "Invalid Algorithm Choice"
+    end = time()
+
+    # print(f"Waiting {(end-start)} seconds to offset Sim Time to Real Time difference")
+    # sleep(end-start)
+
+
     """Handle Drones in Simulation According to Algorithm Results"""
     ic(droneDirectory)
     ic(subprocesses)
@@ -83,7 +120,7 @@ def simulate_BOWSER_simulation(numberOfDrones:int, algoResponse:list, droneDirec
     ic(weaponList)
     
     # for the time being, The algorithms do not change the order in which the threats are entered, so their index should be the same as the ID
-    for droneID, target in enumerate(algoResponse):
+    for droneID, target in enumerate(response):
         # if assigned weapon is short range, add to the short range targets 
         if target[1][0].lower() == weaponList[0].weaponName:
             targetDelegations[0].append(int(droneID)) 
@@ -113,7 +150,40 @@ def simulate_BOWSER_simulation(numberOfDrones:int, algoResponse:list, droneDirec
     simulation_leaker_percent = (LEAKER_COUNT / numberOfDrones) * 100 
     ic(simulation_leaker_percent)
   
-    return simulation_leaker_percent
-
-#if __name__ == "__main__":
-    # simulate_BOWSER_simulation(spawnRange=(10,20), algorithmChoice="DQN", numberOfDrones=3)
+    return algorithm_leaker_percentage, simulation_leaker_percent
+    
+if __name__ == "__main__":
+    # ic("please run full program. no test location dict created yet")
+    dummyDroneDirectory = {0: Drone(droneID=0, currentStatus='Alive', startingLocation=[-0.1633032204811115, 13.401510241791964, 0], destroyedLocation=[], currentLocation=[-0.1633032204811115, 13.401510241791964, 0]),
+                      1: Drone(droneID=1, currentStatus='Alive', startingLocation=[-0.06627079078009374, 17.63481676928732, 0], destroyedLocation=[], currentLocation=[-0.06627079078009374, 17.63481676928732, 0]),
+                      2: Drone(droneID=2, currentStatus='Alive', startingLocation=[-0.017752763251043694, 10.967149399952069, 0], destroyedLocation=[], currentLocation=[-0.017752763251043694, 10.967149399952069, 0]),
+                      3: Drone(droneID=3, currentStatus='Alive', startingLocation=[-0.19041370954388556, 18.070279528163976, 0], destroyedLocation=[], currentLocation=[-0.19041370954388556, 18.070279528163976,0]),
+                      4: Drone(droneID=4, currentStatus='Alive', startingLocation=[-0.18466013793661437, 19.730293521380943, 0], destroyedLocation=[], currentLocation=[-0.18466013793661437, 19.730293521380943,0])}
+    
+    dummyLocationDirectory = {0: {'Speed': 225.0,
+                             'minRange': 100.0,
+                             'x': -0.1633032204811115,
+                             'y': 13.401510241791964,
+                             'z': 0},
+                         1: {'Speed': 225.0,
+                             'minRange': 100.0,
+                             'x': -0.06627079078009374,
+                             'y': 17.63481676928732,
+                             'z': 0},
+                         2: {'Speed': 200.0,
+                             'minRange': 90000.0,
+                             'x': -0.017752763251043694,
+                             'y': 10.967149399952069,
+                             'z': 0},
+                         3: {'Speed': 2250.0,
+                             'minRange': 500.0,
+                             'x': -0.19041370954388556,
+                             'y': 18.070279528163976,
+                             'z': 0},
+                         4: {'Speed': 270.0,
+                             'minRange': 50000.0,
+                             'x': -0.18466013793661437,
+                             'y': 19.730293521380943,
+                             'z': 0}}
+    
+    simulate_BOWSER_simulation(algorithm="Simulated Annealing", droneDirectory=dummyDroneDirectory, locationDirectory=dummyLocationDirectory)
