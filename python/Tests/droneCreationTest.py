@@ -1,4 +1,4 @@
-from Models.Drone import Drone
+from python.Models.Threat import Drone
 from CLIFunctions.cliFunctions import addDroneToSimulation, issueStartCommand
 from time import sleep
 from icecream import ic
