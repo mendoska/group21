@@ -36,7 +36,7 @@ def runACO(threatFileLocation):
         inputs = threats.readlines()
         for line in inputs:
             as_list = line.split(',')
-            function_inputs.append(as_list[1])
+            function_inputs.append(as_list[0])
             inputs_position.append([as_list[1], as_list[2], as_list[3], as_list[4]])
 
     # Initialize pheromone trails
@@ -162,7 +162,7 @@ def runACO(threatFileLocation):
                 pheromone_trails[i][j] *= (1 - pheromone_evaporation_rate)
                 for solution in ant_solutions:
                     if solution[i] == j + 1:
-                        ic(evaluate_fitness(solution))
+                        
                         pheromone_trails[i][j] += pheromone_deposition_rate / evaluate_fitness(solution)
         return pheromone_trails
 
@@ -215,3 +215,5 @@ def runACO(threatFileLocation):
     # plt.grid(True)
     # plt.show()
 
+if __name__ == '__main__':
+    runACO('dataFiles/threat_location_original.csv')
