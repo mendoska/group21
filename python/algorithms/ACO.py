@@ -37,7 +37,7 @@ def runACO(threatFileLocation):
         inputs = threats.readlines()
         for line in inputs:
             as_list = line.split(',')
-            function_inputs.append(as_list[1])
+            function_inputs.append(as_list[0])
             inputs_position.append([as_list[1], as_list[2], as_list[3], as_list[4]])
 
     # Initialize pheromone trails
