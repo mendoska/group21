@@ -163,7 +163,7 @@ def startEmptyGazeboWorldSimulation(totalNumberOfDrones:int) -> subprocess.Popen
             """
     return runAsyncCommand(command=startWorldCommand)
 
-    
+
 def stopWorldSimulation() -> None:
     pkill_ros_command = "pkill -f 'ros'"
     subprocess.run(split(pkill_ros_command))

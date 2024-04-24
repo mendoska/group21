@@ -1,23 +1,14 @@
-from algorithms.dqn_agent import runDQN
-from algorithms.geneticAlgorithmTest import runGA
-from algorithms.munkres_algorithm import runMunkres
-from algorithms.simulated_annealing import runSimulatedAnnealing
-from algorithms.ACO import runACO
-
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 import customtkinter as ctk
 import tkinter as tk
 import pandas as pd
-import random 
-from time import time, sleep
 import csv
 from sim_app import simulate_BOWSER_simulation
-import shutil
 from Models.Threat import Threat
 from math import cos, sin, pi
 from random import randint, uniform
-from csv import DictWriter, reader
+from csv import DictWriter
 from icecream import ic
 
 try:
@@ -90,6 +81,20 @@ def count_threats(threat_file):
         threats = list(reader)
         return len(threats)
     
+def customizeWeaponAmmunitionData(numberOfThreats:int) -> None:
+    ammunitionValues = [0,0,0,0]
+    with open("dataFiles/weapon_data.csv", 'r', newline='') as file:
+        reader = csv.reader(file)
+        weapons = list(reader)
+    for _ in range(numberOfThreats):
+        ammunitionValues[randint(0,3)] += 1
+    for weapon, ammunitionQuantity in zip(weapons, ammunitionValues):
+        weapon[5] = ammunitionQuantity
+
+    with open("dataFiles/weapon_data.csv", 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(weapons)
+    
 def writeDroneDictToCSV(dictionary, csv_filename):
     """
     Write a Python dictionary to a CSV file.
@@ -104,14 +109,13 @@ def writeDroneDictToCSV(dictionary, csv_filename):
     with open(csv_filename, 'w', newline='') as csvfile:
         fieldnames = ['droneID', 'x', 'y', 'z', 'minRange', 'Speed', 'Type' ]
         writer = DictWriter(csvfile, fieldnames=fieldnames)
-
         # Write the header
         # writer.writeheader()
 
         # Write each key-value pair as a separate row
         for key, values in dictionary.items():
             writer.writerow({'droneID': key, 'x': values.get('x', ''), 'y': values.get('y', ''), 'z': values.get('z', ''), 
-                             'minRange':values.get('minRange',''), 'Speed':values.get('Speed',''), 'Type': 'A'})
+                             'minRange':values.get('minRange',''), 'Speed':values.get('speed',''), 'Type': values.get('name','')})
 
 
 # Read and save leaker range and speed for each threat
@@ -149,16 +153,16 @@ def submit():
     else:
         pass
     
-    spawnAngleRad = int(angleEntry.get()) * (pi/180)
-    directionRad =  int(dirSlider.get()) * (pi/180)
+    spawnAngleRad = int(angleEntry.get()) * (pi / 180)
+    directionRad =  int(dirSlider.get()) * (pi / 180)
     algorithm = algoDropdown.get()
     numThreats = int(threatScale.get())
-
     threat_directory, location_directory = {}, {}
     if numThreats != len(threat_coordinates):  
         """ If there are threats without pre-selected types, initialize the preset list to chose randomly """
         threatPresetsDict = readThreatPresets()
         threatPresetKeyList = list(threatPresetsDict.keys()) 
+    ic(threatPresetKeyList)
     for droneID in range(numThreats):
         if rangeMin > rangeMax:
             raise ValueError("Minimum radius cannot be greater than maximum radius")
@@ -166,7 +170,6 @@ def submit():
         """ If user-defined coordinates are provided, use them. Otherwise, generate random coordinates """
         if threat_coordinates and droneID+1 in threat_coordinates:
             # Use user-defined coordinates
-            # ic(threat_coordinates)
             chosenThreat = threat_coordinates[droneID+1]
             startingX = chosenThreat["x"]
             startingY = chosenThreat["y"]
@@ -175,22 +178,22 @@ def submit():
         else:
             # If there are no pre-selected threat types, randomly select a threat by first chosing a random number between 0 and the number of preset threats,
             # then chose the threat located at that index in the list of threat keys
-            chosenThreat = threatPresetsDict[threatPresetKeyList[randint(0, len(threatPresetKeyList)-1)]]
-            # ic(chosenThreat, threatPresetsDict[chosenThreat] )
-            # Generate random angle within 0 to 2*pi
-            angle = uniform(0, spawnAngleRad)+directionRad
-            # Generate random radius within the range [min_radius, max_radius]
-            radius = uniform(rangeMin, rangeMax)
+            chosenThreatName = threatPresetKeyList[randint(0, len(threatPresetKeyList)-1)]
+            chosenThreat = threatPresetsDict[chosenThreatName]
+
+            
+            angle = uniform(0, spawnAngleRad)+directionRad  # Generate random angle within 0 to 2 pi
+            radius = uniform(rangeMin, rangeMax)            # Generate random radius within the range [min_radius, max_radius]
+            
             # Calculate x and y coordinates using polar coordinates to Cartesian coordinates conversion
             startingX = radius * cos(angle)
             startingY = radius * sin(angle)
             startingZ = 0
-        ic(chosenThreat)
+        
         leakerRange = chosenThreat["leaker_range"]
         speedValue =  chosenThreat["speed"]
         # Starting Location  = [x,y,z]
-        ic(startingX ,startingY)
-        location_directory[droneID] = {"x":startingX,"y":startingY,"z":startingZ }    
+        location_directory[droneID] = {"x":startingX,"y":startingY,"z":startingZ, "minRange":leakerRange, "speed":speedValue, "name":chosenThreatName}    
         tempDrone = Threat(threatID=droneID, 
                     currentStatus= "Alive",
                     startingLocation=[startingX,startingY,startingZ],
@@ -202,8 +205,6 @@ def submit():
     
     """Write Drone Locations into CSV for Algorithms"""
     writeDroneDictToCSV(location_directory,threatFileLocation)
-  
-
 # Run simulation with or without gazebo    
     if RUN_SIMULATION:
         algorithm_leaker_percentage, simulation_leaker_percentage = run_BOWSER_simulation(algorithm=algorithm, threatDirectory=threat_directory)
@@ -510,13 +511,13 @@ scaleLabel.place(x=721, y=700)
 algoLabel = ctk.CTkLabel(root, text="Select Algorithm", font=("Helvetica", 20, "bold"))
 algoLabel.pack(pady=5)
 algoLabel.place(x=313,y=380)
-algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "ACO"]
+algoOptions = ["DQN", "Genetic Algorithm", "Munkres", "Simulated Annealing", "Ant Colony", "Particle Swarm"]
 algoDropdown = ctk.CTkOptionMenu(root, values=algoOptions)
 algoDropdown.pack(pady=10)
 algoDropdown.place(x=320,y=410)
 
 threatVar = tk.IntVar(value=1)
-threatScale = ctk.CTkSlider(root, from_=1, to=10, variable=threatVar, command=updateThreatLabel)
+threatScale = ctk.CTkSlider(root, from_=1, to=100, variable=threatVar, command=updateThreatLabel)
 threatScale.pack(pady=10)
 threatScale.place(x=290,y=450)
 currentThreatLabel = ctk.CTkLabel(root, text=f"Current Number of Threats: {threatVar.get()}")

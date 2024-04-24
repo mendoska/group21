@@ -252,14 +252,14 @@ def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, l
         # Add episode_reward to rewards_over_time
         rewards_over_time.append(episode_reward)
         # Print episode number and episode reward
-        print("=========================================================")
-        print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
-        print("=========================================================")
+        # print("=========================================================")
+        # print(f"EPISODE {episode + 1} - EPISODE REWARD: {episode_reward}")
+        # print("=========================================================")
         # Save model after each episode if save_path provided
         if save_path is not None:
             model.save(save_path)
-    print(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
-    print("=========================================================")
+    # print(f"LEAKER PERCENTAGE {(leaker_count / (env.num_threats * num_episodes)) * 100}%")
+    # print("=========================================================")
     leaker_percentage = (leaker_count / (env.num_threats * num_episodes)) * 100
     if test: 
         return response, leaker_count

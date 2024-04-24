@@ -34,7 +34,7 @@ def initializeWeaponsFromFile(weapon_file:str)-> list:
                                      weaponName=threatEntry[0],
                                      location=[threatEntry[1], threatEntry[2], threatEntry[3]],
                                      ammunitionQuantity=int(threatEntry[5]),
-                                     firingRate=threatEntry[6]
+                                     firingRate=float(threatEntry[6])
                                     )
             weapons.append(weaponPlacement)
         
@@ -43,14 +43,14 @@ def initializeWeaponsFromFile(weapon_file:str)-> list:
 
 def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, threatDirectory:dict) -> None:
     global LEAKER_COUNT
-    for targetID in targetList:
+    for idx, targetID in enumerate(targetList):
         targetThreat = threatDirectory[targetID]
-        ic(threatDirectory,targetThreat)
+        # ic(weaponModel.weaponName,threatDirectory,targetThreat,targetList)
         if targetThreat.currentStatus == "Alive":
             if weaponModel.ammunitionQuantity <= 0:
-                ic(f"{weaponModel.weaponName} has run out of ammunition, Drone {targetID} as become a leaker")
-                targetThreat.currentStatus = "Leaker"
-                LEAKER_COUNT += 1
+                ic(f"{weaponModel.weaponName} has run out of ammunition")
+                ic(f"Remaining Targets for {weaponModel.weaponName}: {targetList}")
+                return
                 
             ic(f"{weaponModel.weaponName} has fired once at Drone {targetID}")
             weaponModel.ammunitionQuantity -= 1
@@ -59,6 +59,8 @@ def startWeaponSystem(weaponModel:Weapon, targetList:list, placement:set, threat
                 targetThreat.currentStatus="Dead"
             
             ic(f"Drone {targetID} Destroyed With {weaponModel.weaponName}")
+            targetList[idx] = 'x'
+            sleep(weaponModel.firingRate)
 
 
 
@@ -93,7 +95,7 @@ def waitForLineInSubprocess(subprocess:Popen, targetStr:str, option:int = 0, thr
             if line != '':
                 ic(line) # prints current line to verify what process is doing
         line = subprocess.stdout.readline()
-    print(line)
+    print(threatModel.threatID if threatModel else "",line)
     return
 
 
@@ -115,10 +117,10 @@ starts the subprocess which contains the robot/drone's "brain"
 waits until robot/drone has reached (0,0) +/- the leaker range and 
 then increments the leaker count, updates the drone's class model, and removes the drone from the sim
 """
-def robotController(threatID:int, threatDirectory:dict, subprocesses:dict) -> None:
+def robotController(robot:Threat, subprocesses:dict) -> None:
     global START_COUNTER, LEAKER_COUNT
 
-    robot = threatDirectory[threatID]
+    threatID = robot.threatID
     startingX = robot.startingLocation[0]
     startingY = robot.startingLocation[1]
     startingZ = robot.startingLocation[2] # Currently 0 as simulation uses ground robots instead of drones
@@ -132,19 +134,19 @@ def robotController(threatID:int, threatDirectory:dict, subprocesses:dict) -> No
 
         # calls the function which creates and returns a subprocess object which executes the "add_robots_to_simulation" command
         threatSubprocess = addThreatToSimulation(threatID=threatID, spawnCoordinateX=startingX, spawnCoordinateY=startingY)
-        waitForLineInSubprocess(subprocess=threatSubprocess, targetStr=f"Leaker Range is: {leakerRange}", option=1)
-        # once the subprocess is successfully created, the global counter is incremented and the drone's information is stored
-        waitForLineInSubprocess(subprocess=threatSubprocess, targetStr="[INFO] [add_bot_node-1]: process has finished cleanly [pid", option=0)
+        waitForLineInSubprocess(subprocess=threatSubprocess, targetStr=f"Leaker Range is: {leakerRange}", option=0)
         file_condition.notify_all()
+    # once the subprocess is successfully created, the global counter is incremented and the drone's information is stored
+    waitForLineInSubprocess(subprocess=threatSubprocess, targetStr="[INFO] [add_bot_node-1]: process has finished cleanly [pid", option=0)
     START_COUNTER += 1
         
     subprocesses[f"robot_{threatID}"] = threatSubprocess
     
     # wait for signal that drone has reached the origin, then begin the process of deleting robot (Checks twice as a bandaid fix because false flags have appeared)
     waitForLineInSubprocess(subprocess=threatSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0, threatModel=robot)
-    waitForLineInSubprocess(subprocess=threatSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=1, threatModel=robot)
-    if threatDirectory[threatID].currentStatus == "Alive":
-        threatDirectory[threatID].currentStatus="Leaker"
+    waitForLineInSubprocess(subprocess=threatSubprocess, targetStr="[drive2OriginPattern-4] ic| 'Robot Has Leaked, Commence Deletion'", option=0, threatModel=robot)
+    if robot.currentStatus == "Alive":
+        robot.currentStatus="Leaker"
         LEAKER_COUNT += 1
         destroyThreat(threatID=threatID)
     subprocesses.pop(f"robot_{threatID}")
@@ -163,7 +165,7 @@ def robotController(threatID:int, threatDirectory:dict, subprocesses:dict) -> No
     
 
 def run_BOWSER_simulation(algorithm:str, threatDirectory:dict) -> tuple:
-    global SYSTEM_RUNNING
+    global SYSTEM_RUNNING, LEAKER_COUNT
     
     weaponFileLocation = "dataFiles/weapon_data.csv"
     dqnModelPath = "dataFiles/trained_model.zip"
@@ -188,7 +190,7 @@ def run_BOWSER_simulation(algorithm:str, threatDirectory:dict) -> tuple:
     threads = []
     for x in range(numberOfThreats):
         # Create a thread for each drone
-        thread = Thread(target=robotController, args=(x,threatDirectory, subprocesses))
+        thread = Thread(target=robotController, args=(threatDirectory[x], subprocesses))
         thread.start()
         threads.append(thread)
         
@@ -226,10 +228,16 @@ def run_BOWSER_simulation(algorithm:str, threatDirectory:dict) -> tuple:
         response, algorithm_leaker_percentage = runSimulatedAnnealing()
         algorithm_leaker_percentage *= 100
     
-    elif algorithm == "ACO":
+    elif algorithm == "Ant Colony":
         from algorithms.ACO import runACO
         response, algorithm_leaker_percentage = runACO(threatFileLocation=threatFileLocation)
         algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
+    
+    elif algorithm == "Particle Swarm":
+        from algorithms.Particle_Swarm_Optimization import runPSO
+        response, algorithm_leaker_percentage = runPSO(threatFileLocation=threatFileLocation)
+        algorithm_leaker_percentage = (1.00 - algorithm_leaker_percentage) * 100
+    
     
     else:
         raise "Invalid Algorithm Choice"
@@ -244,54 +252,43 @@ def run_BOWSER_simulation(algorithm:str, threatDirectory:dict) -> tuple:
     """
     # [[short range targets],[medium Range Targets], [Long Range Targets], [Directed Energy Targets]] 
     targetDelegations = [[],[],[],[]]
-    for target in response:
-        # if assigned weapon is short range, add to the short range targets 
-        if target[1] == weaponList[0].weaponName:
-            targetDelegations[0].append(int(target[0])) 
-        # if assigned weapon is medium range, add to the medium range targets 
-        elif target[1] == weaponList[1].weaponName:
-            targetDelegations[1].append(int(target[0])) 
-        # if assigned weapon is long range, add to the long range targets 
-        elif target[1] == weaponList[2].weaponName:
-            targetDelegations[2].append(int(target[0])) 
-        # if none else, it should be a directed energy target, thus add to the D.E targets 
-        else:
-            targetDelegations[3].append(int(target[0])) 
-      
-    weaponThreads = []  
-    for weaponIndex, weaponSystem in enumerate(weaponList):
-        weaponThread = Thread(target=startWeaponSystem, args=(weaponSystem, [weaponIndex],(0,0,0), threatDirectory))
-        weaponThread.start()
-        weaponThreads.append(weaponThread)
-        
-    for thread in weaponThreads:
-        thread.join()
-            
+    ic(weaponList)
     
-     
-    # ic(threatDirectory)
-    # ic(subprocesses)
-    lc = LEAKER_COUNT
-    while LEAKER_COUNT + len(subprocesses) != numberOfThreats:
-        if lc != LEAKER_COUNT:
-            ic(LEAKER_COUNT)
-            lc = LEAKER_COUNT
-        continue
+    # for the time being, The algorithms do not change the order in which the threats are entered, so their index should be the same as the ID
+    for weaponEntry in range(len(response[0][1] )): 
+        # for the time being, The algorithms do not change the order in which the threats are entered, so their index should be the same as the ID
+        for droneID, target in enumerate(response):
+            try:
+                # if assigned weapon is short range, add to the short range targets 
+                if target[1][weaponEntry].lower() == weaponList[0].weaponName:
+                    targetDelegations[0].append(int(droneID)) 
+                # if assigned weapon is medium range, add to the medium range targets   
+                elif target[1][weaponEntry].lower() == weaponList[1].weaponName:
+                    targetDelegations[1].append(int(droneID)) 
+                # if assigned weapon is long range, add to the long range targets 
+                elif target[1][weaponEntry].lower() == weaponList[2].weaponName:
+                    targetDelegations[2].append(int(droneID)) 
+                # if none else, it should be a directed energy target, thus add to the D.E targets 
+                else:
+                    targetDelegations[3].append(int(droneID))  
+            except Exception as e:
+                ic(e, target, weaponEntry, droneID,  (len(response[1])))
+        # ic(targetDelegations)
+        weaponThreads = []  
+        for weaponIndex, weaponSystem in enumerate(weaponList):
+            weaponThread = Thread(target=startWeaponSystem, args=(weaponSystem, targetDelegations[weaponIndex],(0,0,0), threatDirectory))
+            weaponThread.start()
+            weaponThreads.append(weaponThread)
+        for thread in weaponThreads:
+            thread.join()
     
-
     
-    try:
-        for subprocessID in subprocesses:
-            # ic(subprocesses)
-            ic(subprocesses[subprocessID])
-            subprocesses[subprocessID].terminate()
-            sleep(1)
-            subprocesses[subprocessID].kill()
-    except Exception as e: 
-        ic(e)
-        pass
+    for threat in threatDirectory:
+        if threatDirectory[threat].currentStatus == "Alive":
+            # ic(f"Threat {threat} has survived and leaked")
+            threatDirectory[threat].currentStatus = "Leaker"
+            LEAKER_COUNT += 1
     
-    stopWorldSimulation()
 
 
     
@@ -310,13 +307,23 @@ if __name__ == "__main__":
     # ic("please run full program. no test location dict created yet")
     
     dummyDroneDirectory = {
-                      
-                      0: Threat(threatID=0, currentStatus='Alive', leakerRange=1.0, speed=50.0, startingLocation=[-61.861562065612226, 7.25152907262536, 0], destroyedLocation=[], currentLocation=[]),
-                      
+                       0: Threat(threatID=0, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[26.00580291816817, -44.105597561488764, 0], destroyedLocation=[], currentLocation=[]),
+                      1: Threat(threatID=1, currentStatus='Alive', leakerRange=10.0, speed=200.0, startingLocation=[-51.112840604320986, 1.6490815897669158, 0], destroyedLocation=[], currentLocation=[]),
+                      2: Threat(threatID=2, currentStatus='Alive', leakerRange=1.0, speed=225.0, startingLocation=[-33.3218579619414, -2.6078985893150333, 0], destroyedLocation=[], currentLocation=[]),
+                      3: Threat(threatID=3, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[-1.2628347012036054, -22.476651880389106, 0], destroyedLocation=[], currentLocation=[]),
+                      4: Threat(threatID=4, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[-50.152301163669485, -38.35252885137785, 0], destroyedLocation=[], currentLocation=[]),
+                      5: Threat(threatID=5, currentStatus='Alive', leakerRange=10.0, speed=200.0, startingLocation=[-54.084484436000025, -37.32411535940071, 0], destroyedLocation=[], currentLocation=[]),
+                      6: Threat(threatID=6, currentStatus='Alive', leakerRange=10.0, speed=200.0, startingLocation=[-22.395577976263024, -13.930194897777735, 0], destroyedLocation=[], currentLocation=[]),
+                      7: Threat(threatID=7, currentStatus='Alive', leakerRange=1.0, speed=225.0, startingLocation=[-50.37019795443521, -20.871748208822613, 0], destroyedLocation=[], currentLocation=[]),
+                      8: Threat(threatID=8, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[-19.89508920576726, -2.3314013481701883, 0], destroyedLocation=[], currentLocation=[]),
+                      9: Threat(threatID=9, currentStatus='Alive', leakerRange=1.0, speed=225.0, startingLocation=[-39.800291292351275, -52.95114983203683, 0], destroyedLocation=[], currentLocation=[]),
+                      10: Threat(threatID=10, currentStatus='Alive', leakerRange=10.0, speed=200.0, startingLocation=[-36.26243169344489, -52.935250397807586, 0], destroyedLocation=[], currentLocation=[]),
+                      11: Threat(threatID=11, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[10.999749047833157, -25.47669494926166, 0], destroyedLocation=[], currentLocation=[]),
+                      12: Threat(threatID=12, currentStatus='Alive', leakerRange=1.0, speed=1000.0, startingLocation=[-62.983260736967964, -10.686763174031013, 0], destroyedLocation=[], currentLocation=[])
                           }
     
     
-    run_BOWSER_simulation(algorithm="Simulated Annealing", threatDirectory=dummyDroneDirectory)
+    run_BOWSER_simulation(algorithm="Particle Swarm", threatDirectory=dummyDroneDirectory)
     # print("s")
 
 

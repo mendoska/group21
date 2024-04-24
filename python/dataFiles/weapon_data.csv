@@ -1,4 +1,4 @@
-long range missile,0.0,0.0,0.0,125000,15,0.0000001,0,5000,SLS
-medium range missile,0.0,0.0,0.0,90000,30,0.0001,0,1000,S
-short range missile,0.0,0.0,0.0,15000,10,0.0001,0,200000,SSL
-directed energy,0.0,0.0,0.0,20000,10,0.000001,0,300000,S
+long range missile,0.0,0.1,0.2,125000,12,0.0000001,0,5000,SLS
+medium range missile,0.0,0.0,0.0,90000,6,0.0001,0,1000,S
+short range missile,0.0,0.0,0.0,15000,4,0.0001,0,200000,SSL
+directed energy,0.0,0.0,0.0,20000,8,1e-06,0,300000,S
