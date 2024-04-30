@@ -5,8 +5,17 @@ import random
 import matplotlib.pyplot as plt
 from icecream import ic
 
+"""
+    Use: Runs the Ant Colony Optimization (ACO) algorithm to finds the best defensive strategy against threats.
+    Inputs: Reads data such as: [THREAT INFO FORMAT: THREAT NAME, X POS, Y POS, Z POS, MIN RANGE, SPEED, STATUS] 
+    Returns: The best solution Ex. [1,2,1,4,3,2,2,4] where 1 represents a Long Range Missile(LRM), 2 represents Medium Range Missile(MRM), 3 represents Short Range Missile(SRM), and 4 represents Directed Energy(DE)
+    and its fitness value Ex. 0.75.
+    Each answer/solution will be ranked as such: 1 point awarded for each successful kill-> highest scoring solutions will be used as parents
+    
+"""
 
 def runACO(threatFileLocation):
+    
     num_ants = 6
     iterations = 100
     #Rate at which pheromone evaporates
@@ -42,8 +51,12 @@ def runACO(threatFileLocation):
     # Initialize pheromone trails
     pheromone_trails = np.full((len(function_inputs), len(DefensiveAssets)), pheromone_initial)
 
-    # Define fitness evaluation function
     def evaluate_fitness(solution):
+        """
+        Use: Evaluates the fitness of a solution based on the success count of defending against threats.
+        Inputs: solution (list) - A list of integers representing weapon choices for each threat.
+        Returns: fitness (float) - The fitness value of the solution.
+        """
         success_count = 0
         weapons_quantity = [8, 20, 25, 10]  
         for threat in range(len(function_inputs)):
@@ -141,8 +154,15 @@ def runACO(threatFileLocation):
         fitness = success_count/len(function_inputs)
         return fitness
 
-    # Define ACO functions
+    
     def construct_ant_solutions(num_ants, pheromone_trails):
+        """
+        Use: Constructs solutions for each ant based on pheromone levels.
+        Inputs: -The number of ants in the colony.
+                -Array representing the pheromone levels.
+        Returns: List of ant solutions, each solution is a list of integers representing weapon choices for each threat.
+        """
+
         ant_solutions = []
         for ant in range(num_ants):
             solution = []
@@ -156,7 +176,13 @@ def runACO(threatFileLocation):
 
     # Update pheromone trails
     def update_pheromones(pheromone_trails, ant_solutions, best_solution):
-        #Evaporate pheromones
+        """
+         Use: Updates the pheromone trails based on the ant solutions.
+         Inputs: -Array representing the pheromone levels.
+                 -List of ant solutions.
+                 -The best solution found so far.
+         Returns: Updated array representing the pheromone levels.
+        """
         for i in range(len(function_inputs)):
             for j in range(len(DefensiveAssets)):
                 pheromone_trails[i][j] *= (1 - pheromone_evaporation_rate)
@@ -168,7 +194,11 @@ def runACO(threatFileLocation):
 
 
     def print_results(solution):
-
+        """
+        Use: Prints the weapons chosen for each threat in the solution.
+        Inputs: A list of integers representing weapon choices for each threat.
+        Returns: List of the threat index and the chosen weapon(s) for that threat.
+        """
         res = []
         for index, weapon in enumerate(solution):
             if weapon == 1:
