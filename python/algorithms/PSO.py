@@ -6,6 +6,7 @@ from icecream import ic
 
 """
     Use: Runs the Particle Swarm Optimization (PSO) algorithm to finds the best defensive strategy against threats.
+    The Particle Swarm Optimization (PSO) algorithm is a population-based optimization algorithm that is inspired by the social behavior of birds flocking or fish schooling.
     Inputs: Reads data such as: [THREAT INFO FORMAT: THREAT NAME, X POS, Y POS, Z POS, MIN RANGE, SPEED, STATUS] 
     Returns: The best solution Ex. [1,2,1,4,3,2,2,4] where 1 represents a Long Range Missile(LRM), 2 represents Medium Range Missile(MRM), 3 represents Short Range Missile(SRM), and 4 represents Directed Energy(DE)
     and its fitness value Ex. 0.75.
