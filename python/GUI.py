@@ -13,7 +13,7 @@ from icecream import ic
 
 try:
     from app import run_BOWSER_simulation
-    RUN_SIMULATION = True  # Change to True for running simulation or False for not
+    RUN_SIMULATION = False  # Change to True for running simulation or False for not
 except:
     RUN_SIMULATION = False
     
@@ -28,6 +28,21 @@ weaponFileLocation = "dataFiles/weapon_data.csv"
 historyFile = "dataFiles/history.csv"
 
 
+# shutil.copyfile(weaponFileOriginal, weaponFileLocation)
+
+# Set GUI theme
+ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
+ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
+
+# Inital main window
+root = ctk.CTk()
+root.title('B.O.W.S.E.R.')
+root.geometry('1250x750')
+
+#------------------------------------------------------------------------------------------------------
+#Use: initialize radar screen
+#Input: no
+#Return: radar screen on the main window
 def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 tk.Canvas.create_circle = _create_circle
@@ -47,19 +62,11 @@ def initializeRadarScreen() -> tk.Canvas:
     canvas.create_line(250, 250, 250, 10, width=5, fill="White", dash=(1,48)) # +Y Tick Marks
     canvas.create_circle(250, 250, 10, fill="#BBB", outline="")
     return canvas
+#-------------------------------------------------------------------------------------------------------
 
-# shutil.copyfile(weaponFileOriginal, weaponFileLocation)
-
-# Set GUI theme
-ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
-ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
-
-# Inital main window
-root = ctk.CTk()
-root.title('B.O.W.S.E.R.')
-root.geometry('1250x750')
-
-# Write name and leaker percentage to history file
+#Use: save name and leaker percenetage to history file
+#Input: history file name, list of name and leaker percentage
+#Return: save to history file
 def write_history(history_file,list):
     fieldnames = ['algorithm_name', 'leaker_percentage']
     new_list = {'algorithm_name': list[0], 'leaker_percentage': list[1]}
@@ -68,11 +75,15 @@ def write_history(history_file,list):
         writer.writerow(new_list)
         file.close()
 
-# Read history file and sort by leaker percentage
+
+#Use: read name and leaker percenetage from history file
+#Input: history file name
+#Return: list of name and leaker percentage
 def read_history(history_file):
     sortedList = pd.read_csv(history_file)
     sortedList.sort_values(sortedList.columns[1],axis=0,inplace=True)
     return sortedList.to_string(index=False)
+
 
 # Read the number of inputs 
 def count_threats(threat_file):
@@ -94,7 +105,8 @@ def customizeWeaponAmmunitionData(numberOfThreats:int) -> None:
     with open("dataFiles/weapon_data.csv", 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(weapons)
-    
+
+#write drone info to csv    
 def writeDroneDictToCSV(dictionary, csv_filename):
     """
     Write a Python dictionary to a CSV file.
@@ -126,6 +138,7 @@ def readThreatPresets():
              parts = line.strip().split(',')
              threat_presets[parts[0]] = {'leaker_range': float(parts[1]), 'speed': float(parts[2])}
      return threat_presets
+
 # Run all these when start button is hit
 def submit():
     outputLabel.configure(text="")
@@ -140,7 +153,9 @@ def submit():
         messagebox.showwarning(title=None, message="Invalid Range Provided")
         print("Invalid Range Provided")
         return
+    
     unit = unitDropdown.get()
+    #for different units
     if unit =="km":
         rangeMin *= 1000
         rangeMax *= 1000
@@ -265,7 +280,10 @@ def submit():
 
     rwin.mainloop()
 
-# Show update of input
+#-------------------------------------------------------------------------------------
+#use: Show update of input
+#Input: number of threat, degree of angle, degree of direction
+#Return: show the input value
 def updateThreatLabel(value):
     currentThreatLabel.configure(text=f"Current Number of Threats: {int(value)}")
 
@@ -274,6 +292,7 @@ def angleSlider(value):
 
 def directionSlider(value):
     dirLabel.configure(text=f"Direction: {int(value)} degree")
+#-------------------------------------------------------------------------------------
 
 # For inital leaderboard
 savedList = read_history(historyFile)
@@ -290,8 +309,10 @@ title.place(x=425,y=25)
 
 initializeRadarScreen()
 
-
-# Update radar screen
+#-----------------------------------------------------------------------------------
+#use: Update radar screen
+#Input: rangeMin, rangeMax, angle, direction
+#Return: Draw the radar of the input values
 def showRange(event):
     canvas = initializeRadarScreen()
 # Get values
@@ -340,6 +361,7 @@ def showRange(event):
     canvas.create_circle_arc(250, 250, rangeMax, fill="green", outline="", start=startAngle, end=endAngle)
     canvas.create_circle_arc(250, 250, rangeMin, fill="red", outline="", start=startAngle, end=endAngle)
     canvas.create_circle(250, 250, rSize, fill="#BBB", outline="")
+#------------------------------------------------------------------------------------------------------------
 
 # New window for more features button
 def openNewWindow():
