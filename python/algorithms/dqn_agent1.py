@@ -10,6 +10,12 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
+"""  
+    This version of DQN contains all the experiremental changes like batch updates, Dual replay buffering and expoloration decay
+    All of these have varying results in improving the performance based on threat count. 
+    Otherwise it is identical to the other. Use this with these points in mind
+"""
+
 class CustomDQN(DQN):
     def compute_q_values(self, states):
            # Convert states to PyTorch tensor

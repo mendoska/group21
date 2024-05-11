@@ -6,6 +6,7 @@ import math
 import random
 import csv
 
+# Makes DQN env more consistent 
 random.seed(42)
 np.random.seed(42)
 
@@ -139,7 +140,7 @@ class BattleEnv(Env):
                 total_reward+= unassigned_penalty
         return total_reward
 
-
+# These 2 functions help calcualte PK (probability of kill)
 def dist_to_meet(weapon, threat):
     curr_dist = math.dist([threat.get_x(), threat.get_y(), threat.get_z()],
                           [weapon.get_x(), weapon.get_y(), weapon.get_z()])
@@ -152,7 +153,7 @@ def proximity(weapon, threat):
     return weapon.get_max_range() - dist_to_meet(weapon, threat)
 
 
-# Train agent on random threats
+# Train agent on random threats - This is fake data for training
 def make_training_data(num_threats=15):
     threats = []
     threat_names = ["bomber", "fighter", "slow missile", "fast missile"]
@@ -161,14 +162,15 @@ def make_training_data(num_threats=15):
         threats.append(Threat(random.choice(threat_names), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000)))
     return threats
 
-# Read the number of inputs 
+# Read the number of inputs
+# This is vital as the agent will not work if the threat count differs from the training data
 def count_threats(threat_file):
     with open(threat_file, 'r') as file:
         reader = csv.reader(file)
         threats = list(reader)
         return len(threats)
 
-# Test agent on threats from file
+# Test agent on threats from file - This is the actual data
 def use_testing_data(threat_file):
     threats = []
     
@@ -180,17 +182,24 @@ def use_testing_data(threat_file):
 
 
 # TRAIN DEEP Q-NETWORK TO SOLVE BATTLE ENV
+""" 
+    INPUT: weapons, threats, episode count
+    OUTPUT: episode reward, leaker count, trained model
+    Currently trains agent with random threat values for 100 iterations before using the agent against the real threats
+"""
 def train_dqn_agent(weapon_lst, threat_lst, num_episodes=1000, save_path=None, load_path=None, use_actual_data=False, test=False, threat_file_path=None):
     env = BattleEnv(weapon_lst, use_testing_data(threat_file_path) if use_actual_data else threat_lst)
-
-    # Define hyperparameters
+    """"
+        Define hyperparameters--These are the important values, 
+        If agent isnt working right its probably because these values need to be changed in relation to the threat count
+        Ideally given more time I would split these into seperate cases based on threat count
+    """    
     policy_kwargs = dict(net_arch=[128, 128, 128])  # Specify NN architecture for agent: MLP with 3 hidden layers of 128 neurons
     learning_rate = 0.01  # Control how fast agent updates Q-table: low LR => doesn't learn, high LR => unstable
     learning_starts = 100 # Define number of initial steps to take in environment before training
     # initial_exploration_fraction = 1.0  # Start with full exploration
     # exploration_decay = 0.99  # Decay rate for exploration fraction per episode
     exploration_fraction = 0.5 # Manipulate this if DQN is not assigning weapons, Higher = more exploring, Lower = more decisions based on memory
-
     batch_size = 64
     buffer_size = 10000
     target_update_interval = 500
@@ -276,8 +285,11 @@ test_weapons = [Weapon("long range missile", r(0, 1000), r(0, 1000), r(0, 1000),
                 Weapon("directed energy", r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), r(0, 1000), de_pk)]
 
 # threat_count = count_threats("dataFiles/threat_location.csv")
-
-# Train DQN agent and save it to "trained_model.zip" for future use
+"""
+    Train DQN agent and save it to "trained_model.zip" for future use
+    This is essentially the 'main' and the function called in GUI and sim
+    If train is true then fresh agent is trained, else it uses the model against actual threats
+"""
 def runDQN(loadPath=None, savePath="dataFiles/trained_model.zip", train=True, num_threats=None, threatFilePath=None):
     leaker_percentage = 0
     if train:
